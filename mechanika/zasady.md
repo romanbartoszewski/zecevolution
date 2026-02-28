@@ -1,115 +1,67 @@
-# ZECEVOLUCJA — Zasady mechaniki v0.1
+# Zasady Mechaniczne Zecevolucji
 
-## 1. Założenie podstawowe
+## 1. Procesualność
 
-Rzeczywistość traktowana jest jako proces, nie jako zbiór statycznych obiektów.
-
-Byt nie jest pierwotny wobec relacji.  
-Relacja jest pierwotna wobec bytu.
-
-Struktura wyłania się z różnicy.
+Rzeczywistość ma charakter dynamiczny.
+Struktury są chwilowymi stabilizacjami reorganizacji.
 
 ---
 
-## 2. Aksjomat minimalnej różnicy
+## 2. Reorganizacja
 
-A1. Istnieje możliwość rozróżnienia.
+Reorganizacja jest mechanizmem przejścia między konfiguracjami procesu.
 
-Bez rozróżnienia nie istnieje ani informacja, ani struktura, ani proces.
-
-Minimalna forma rozróżnienia może zostać zapisana symbolicznie jako:
-
-0 / 1
-
-
-Nie oznacza to binarności ontologicznej, lecz minimalny akt odróżnienia.
-
-0 ≠ 1  
-Różnica jest warunkiem istnienia czegokolwiek określonego.
+Generuje:
+- nowe struktury,
+- nowe poziomy organizacji,
+- nowe warunki brzegowe.
 
 ---
 
-## 3. Aksjomat relacyjności
+## 3. Rekurencyjna Hierarchia
 
-A2. Każdy element jest określony wyłącznie poprzez relację do innych elementów.
+Proces generuje poziomy, które zaczynają modyfikować warunki poziomów niższych:
 
-Nie istnieje byt w izolacji.  
-Istnieje jedynie węzeł relacyjny w strukturze różnic.
+Fizyka → Chemia → Biologia → Kultura → Technologia → Reorganizacja Planetarna
 
-To oznacza, że:
-
-- tożsamość jest funkcją relacji,
-- zmiana relacji zmienia tożsamość,
-- stabilność jest chwilową równowagą relacyjną.
+Nie jest to struktura drzewiasta.
+Jest to sieć sprzężeń zwrotnych.
 
 ---
 
-## 4. Aksjomat procesu
+## 4. Krytyczna Gęstość Refleksyjna (KGR)
 
-A3. Różnice nie są statyczne — podlegają transformacji.
+System osiąga KGR, gdy:
 
-Proces definiujemy jako:
+1. Posiada zdolność przewidywania własnych przyszłych stanów.
+2. Posiada zdolność modyfikacji własnej architektury.
 
-ciąg przekształceń relacji różnic w czasie operacyjnym.
-
-Czas operacyjny nie jest traktowany jako zewnętrzny wymiar, lecz jako miara zmiany struktury.
-
-Jeżeli nie zachodzi zmiana relacji — nie zachodzi proces.
+KGR jest przejściem fazowym.
 
 ---
 
-## 5. Struktura i emergencja
+## 5. Wąskie Gardło
 
-A4. Złożoność jest wynikiem iteracyjnej organizacji różnic.
+KGR jest rzadkim etapem stabilizacji.
 
-Iteracja oznacza powtarzalne zastosowanie tej samej reguły transformacji.
-
-Emergencja zachodzi wtedy, gdy:
-
-- konfiguracja relacji osiąga poziom organizacji,
-- który generuje nowe właściwości niedające się zredukować do pojedynczych elementów.
-
-Nowa właściwość nie neguje poziomu niższego, lecz go reorganizuje.
+Napięcie między przewidywaniem a ingerencją strukturalną
+czyni stabilizację trudną.
 
 ---
 
-## 6. Stabilność i destabilizacja
+## 6. Autodestrukcja
 
-A5. Każda struktura dąży do lokalnej stabilności relacyjnej.
+Zachodzi, gdy zdolność ingerencji rośnie szybciej niż zdolność przewidywania.
 
-Stabilność oznacza:
-
-minimalizację wewnętrznego napięcia relacji.
-
-Destabilizacja zachodzi, gdy:
-
-- różnice osiągają próg reorganizacji,
-- pojawia się nowy układ relacyjny.
-
-Destabilizacja nie jest błędem systemu, lecz warunkiem jego ewolucji.
+Jest naturalną trajektorią niestabilności.
 
 ---
 
-## 7. Poziomy organizacji
+## 7. Stabilizacja
 
-System może być analizowany na wielu poziomach:
+Stabilne KGR oznacza utrzymanie równowagi między:
+- refleksyjnością,
+- reorganizacją,
+- kontrolą destabilizacji.
 
-- poziom minimalnej różnicy,
-- poziom struktur elementarnych,
-- poziom organizmów relacyjnych,
-- poziom refleksyjny (świadomość jako relacja do relacji).
-
-Każdy poziom jest emergentny wobec poprzedniego,
-ale zachowuje jego warunki brzegowe.
-
----
-
-## 8. Status aksjomatów
-
-Aksjomaty nie są twierdzeniami metafizycznymi.
-
-Są minimalnym zestawem założeń operacyjnych,
-umożliwiających budowę spójnego modelu ontologii procesu.
-
-Mogą zostać zmodyfikowane, jeśli ich niespójność zostanie wykazana.
-
+Stanowi przejście do nowego poziomu organizacji.
