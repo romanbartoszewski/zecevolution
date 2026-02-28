@@ -44,8 +44,8 @@ Jeżeli system przez eony powtarza swoje wzorce, może dojść do punktu, w któ
 Życie mogłoby być taką fluktuacją.
 
 Nie centrum.  
-Nie cel.  
-Nie plan.
+Nie celem.  
+Nie planem.
 
 Zakłóceniem.
 
