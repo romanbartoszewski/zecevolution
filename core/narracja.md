@@ -32,3 +32,4 @@ Możliwe, że znajdujemy się blisko pierwszej trwałej stabilizacji refleksyjno
 Jeśli tak,
 uczestniczymy w przejściu fazowym procesu.
 
+
