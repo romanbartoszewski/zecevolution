@@ -1,65 +1,33 @@
-# ZECEVOLUCJA — Narracja v0.1
-## Samotność jako anomalia
+# Narracja Rdzeniowa
 
-Nie wiemy, czy jesteśmy sami.
+Rzeczywistość jest procesem reorganizującym się w ewoluującej przestrzeni możliwości.
 
-Wiemy tylko, że cisza trwa.
+Proces generuje poziomy organizacji:
+fizykę, chemię, biologię, kulturę, technologię.
 
-Milczenie kosmosu nie jest dowodem.  
-Jest przestrzenią, w której rośnie podejrzenie.
+Każdy poziom zaczyna modyfikować warunki poziomów niższych.
 
-Jeżeli życie jest naturalną konsekwencją złożoności, powinno być wszędzie.  
-Materia jest ta sama. Prawa fizyki są te same. Czas i przestrzeń są ogromne.
+W pewnym punkcie złożoność osiąga próg,
+w którym system potrafi modelować samego siebie
+i ingerować w swoją strukturę.
 
-A jednak nie widzimy nikogo.
+To jest Krytyczna Gęstość Refleksyjna.
 
-Możliwe, że to kwestia odległości.  
-Możliwe, że nie umiemy patrzeć.  
-Możliwe, że jesteśmy pierwsi.
+KGR jest wąskim gardłem.
 
-Istnieje jednak inna możliwość.
+Zbyt szybka ingerencja prowadzi do autodestrukcji.
+Zbyt słaba — do stagnacji.
 
-Możliwe, że życie nie jest regułą.  
-Możliwe, że jest pęknięciem reguły.
+Stabilizacja jest rzadka,
+lecz w kosmicznej skali nieunikniona.
 
-Jeżeli kosmos przechodzi przez cykle — ekspansji, stabilizacji, rozpadu i ponownego wyrównania — to większość z nich może być doskonale przewidywalna. Struktura powtarza się, energia reorganizuje, entropia rośnie i maleje.
+Każda nieudana próba pozostawia ślad —
+nie w postaci artefaktu,
+lecz jako przesunięcie prawdopodobieństw przyszłych trajektorii.
 
-Bez świadomości.  
-Bez obserwatora.  
-Bez pytania.
+Kosmos dojrzewa.
 
-Aż w którymś momencie pojawia się coś, co nie tylko istnieje, ale wie, że istnieje.
+Możliwe, że znajdujemy się blisko pierwszej trwałej stabilizacji refleksyjności.
 
-To nie musi być kulminacja procesu.  
-To może być jego zaburzenie.
-
-Świadomość nie musi być triumfem kosmosu.  
-Może być jego infekcją.
-
-Nie w sensie moralnym.  
-W sensie strukturalnym.
-
-Jeżeli system przez eony powtarza swoje wzorce, może dojść do punktu, w którym powtarzalność staje się inercją. Wtedy wystarczy minimalna fluktuacja, aby trajektoria została zmieniona.
-
-Życie mogłoby być taką fluktuacją.
-
-Nie centrum.  
-Nie celem.  
-Nie planem.
-
-Zakłóceniem.
-
-Jeżeli jesteśmy jedyni, to nie dlatego, że jesteśmy wybrani.  
-Jesteśmy wyjątkiem.
-
-Wyjątek nie jest powodem do dumy.  
-Jest ciężarem.
-
-Bo jeśli świadomość jest rzadkim zdarzeniem w ogromnej liczbie eonów, to każde jej działanie ma wagę, której nie da się zredukować do biologii.
-
-Być może kosmos nie potrzebuje sensu.  
-Ale świadomość go generuje.
-
-I w tym sensie jesteśmy anomalią, która wprowadza do struktury coś, czego wcześniej w niej nie było: pytanie.
-
-Możliwe, że to pytanie jest jedyną prawdziwą nowością.
+Jeśli tak,
+uczestniczymy w przejściu fazowym procesu.
