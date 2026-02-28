@@ -80,8 +80,7 @@ Cykle kosmiczne mogą być w ogromnej większości pozbawione świadomości.
 
 Życie mogłoby być:
 
-- unikatowe w skali ogromnej liczby eonów,
-- jednorazowe w danym cyklu,
+- unikatowe w skali ogromnej liczby eonów, nie tylko jednorazowe w danym cyklu
 - niepowtarzalne w tej konfiguracji reguły.
 
 Nie jako centrum.  
@@ -106,7 +105,7 @@ Jeżeli świadomość jest zdarzeniem granicznym, jej brak w obserwowalnym kosmo
 Hipoteza ta:
 
 - nie jest twierdzeniem naukowym,
-- nie rości sobie prawa do prawdy ostatecznej,
+- nie rości sobie prawa do prawdy,
 - pozostaje marginesem spekulacyjnym projektu.
 
 Jeżeli dane empiryczne w przyszłości ją podważą, może zostać porzucona bez naruszenia rdzenia ontologii procesu.
