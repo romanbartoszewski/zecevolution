@@ -9,7 +9,7 @@ Milczenie kosmosu nie jest dowodem.
 Jest przestrzenią, w której rośnie podejrzenie.
 
 Jeżeli życie jest naturalną konsekwencją złożoności, powinno być wszędzie.  
-Materia jest ta sama. Prawa fizyki są te same. Czas jest ogromny.
+Materia jest ta sama. Prawa fizyki są te same. Czas i przestrzeń są ogromne.
 
 A jednak nie widzimy nikogo.
 
