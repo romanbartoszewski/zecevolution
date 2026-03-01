@@ -357,13 +357,19 @@ d3.json("data.json")
         cb.addEventListener("change", () => {
           filterState[type] = cb.checked;
           applyFilters();
-            // Zamknięcie widoku szczegółów w panelu (wraca filtry + przyciski)
-if (panelCloseBtn) {
-  panelCloseBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    hidePanelDetails();
-    stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+// Zamknięcie widoku szczegółów w panelu (delegacja – działa niezależnie od tego, kiedy powstaje button)
+const panelEl = document.getElementById("panel");
+if (panelEl && !panelEl.__closeDetailsBound) {
+  panelEl.__closeDetailsBound = true;
+
+  panelEl.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t && t.id === "panel-close-details") {
+      e.preventDefault();
+      e.stopPropagation();
+      hidePanelDetails();
+      stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+    }
   });
 }
               // P1: sterowanie widokiem (reset / fit)
