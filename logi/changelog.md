@@ -52,19 +52,27 @@ Ryzyko regresji: brief może się rozjechać z pełną specyfikacją — wymaga 
   - zdefiniowano `𝓕` formalnie jako rodzinę struktur reguł `{F_i}` + test rozróżniający θ vs 𝓕,
   - zmieniono kryterium dowodowe `M`: z OR na wymóg **C1 AND C3** (C2 pomocnicze),
   - doprecyzowano stabilność progu: N=3 jako domyślny minimum + warunek anty-„fajerwerk” + możliwość kryterium domenowego,
-  - dodano N4 („lookup-table kontrfaktyczność”) oraz doprecyzowano przypadki graniczne (m.in. model-based RL).
-- `B/brief_B.md` zsynchronizowano z v0.5.
-- `B/mechanika/terminologia.md` zsynchronizowano z v0.5 (θ vs 𝓕).
+  - dodano N4 („lookup-table kontrfaktyczność”) oraz doprecyzowano przypadki graniczne.
 Powód: odpowiedź na audyt: usunięcie nieostrości `𝓕` i ograniczenie fałszywych pozytywów dla `M`.  
 Ryzyko regresji: wyższy próg dowodowy; w black-boxach ablacja może być trudna.
 
 ### [B] KGR v0.6 — uszczelnienie granic i stabilności
 - `B/specyfikacje/kgr_threshold.md` → v0.6:
-  - dodano rozróżnienie „parametry zakresu” (np. głębokość/horyzont/budżet) jako **θ**, nie `𝓕` (uszczelnienie sporu AlphaZero-like),
-  - C3 rozszerzono: **ablacja lub istotne zakłócenie funkcji M** (testowalność dla niemodularnych/black-box),
-  - stabilność progu sformalizowano metrycznie: `J ≥ J_baseline − δ` w każdym cyklu (koniec subiektywnego „fajerwerku”),
+  - dodano rozróżnienie „parametry zakresu” jako **θ**, nie `𝓕`,
+  - C3 rozszerzono: ablacja lub istotne zakłócenie funkcji M,
+  - stabilność sformalizowano metrycznie: `J ≥ J_baseline − δ` w każdym cyklu,
   - doprecyzowano KGR jako własność czasową/epizodyczną.
-- `B/brief_B.md` zsynchronizowano z v0.6.
-- `B/mechanika/terminologia.md` zsynchronizowano z v0.6 (parametry zakresu, J_baseline/δ, C3 perturbation).
-Powód: odpowiedź na audyt round 2: luka θ/𝓕 przy zmianach zakresu, nietestowalność ablacji oraz uznaniowość stabilności.  
-Ryzyko regresji: konieczność jawnego zdefiniowania `J` i baseline w każdym teście; ryzyko nadużyć przy „zakłócaniu M”, jeśli nie jest dobrze opisane.
+- `B/brief_B.md` i `B/mechanika/terminologia.md` zsynchronizowano z v0.6.
+Powód: odpowiedź na audyt: luka θ/𝓕 przy zmianach zakresu, nietestowalność ablacji oraz uznaniowość stabilności.  
+Ryzyko regresji: konieczność jawnego zdefiniowania `J` i baseline; arbitralność przy „zakłócaniu M”, jeśli brak protokołu.
+
+### [B] KGR v0.7 — self-referential rule-space + minimalna generalizacja
+- `B/specyfikacje/kgr_threshold.md` → v0.7:
+  - rozdzielono `𝓕_sys` (reguły własnych operacji systemu) vs `𝓕_obj` (reguły obiektu/środowiska),
+  - doprecyzowano, że KGR dotyczy wyłącznie `𝓕_sys` oraz self-modelu `M_sys`,
+  - dodano C4 (novelty check): minimalna generalizacja poza katalog zmian (anty NAS/lookup),
+  - stabilność dopuszcza jedną „dolinę eksploracji” w oknie 3 cykli (max 1 cykl poniżej `J_baseline − δ`, powrót w następnym),
+  - dodano test N5 (external-only) jako opcjonalny test zakresu.
+- `B/brief_B.md` i `B/mechanika/terminologia.md` zsynchronizowano z v0.7.
+Powód: odpowiedź na audit round 3: luka MBRL (model obiektu) oraz ryzyko „katalog NAS”.  
+Ryzyko regresji: wymaga jawnego rozdzielenia `𝓕_sys/𝓕_obj` w domenie oraz projektowania holdout form dla C4.
