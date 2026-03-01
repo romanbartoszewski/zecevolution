@@ -10,15 +10,26 @@ body {
   height: 100vh;
 }
 
+/* Graf */
 #graph {
   flex: 3;
+  min-width: 0; /* ważne w flex dla poprawnego skalowania */
+  position: relative;
 }
 
+#graph svg {
+  display: block; /* usuwa "baseline gap" */
+}
+
+/* Panel */
 #panel {
   flex: 1;
+  min-width: 260px;
+  max-width: 420px;
   background-color: #161b22;
   padding: 20px;
   border-left: 1px solid #30363d;
+  overflow-y: auto; /* P0/P1: panel nie może rozjeżdżać layoutu */
 }
 
 #panel h2 {
@@ -29,8 +40,75 @@ body {
   display: block;
   margin-top: 15px;
   color: #58a6ff;
+  text-decoration: none;
 }
 
+#node-link:empty {
+  display: none; /* nie pokazuj pustego linku */
+}
+
+/* Status (loading/error) */
+#status {
+  margin-top: 12px; /* inline w HTML jest OK, ale tu i tak standaryzujemy */
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+#status-loading {
+  color: #c9d1d9;
+  opacity: 0.9;
+}
+
+#status-error {
+  color: #ff7b72;
+  background: rgba(255, 123, 114, 0.08);
+  border: 1px solid rgba(255, 123, 114, 0.35);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+#status code {
+  color: #c9d1d9;
+}
+
+/* Filtry (renderowane w #filters przez graph.js) */
+#filters {
+  display: grid;
+  gap: 10px;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+  cursor: pointer;
+  color: #c9d1d9;
+  font-size: 14px;
+}
+
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #58a6ff;
+  cursor: pointer;
+}
+
+.filter-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid #ccc; /* kolor nadpisywany inline przez JS (borderColor) */
+  box-sizing: border-box;
+}
+
+.filter-text {
+  white-space: nowrap;
+}
+
+/* Overlay */
 #overlay {
   position: fixed;
   inset: 0;
@@ -56,7 +134,7 @@ body {
   max-width: 90%;
   color: #ccc;
   border-radius: 8px;
-  box-shadow: 0 0 30px rgba(0,255,255,0.2);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
 }
 
 #overlay-content h2 {
@@ -71,3 +149,28 @@ body {
   text-decoration: none;
 }
 
+#overlay-link:empty {
+  display: none;
+}
+
+/* Responsywność (telefon) */
+@media (max-width: 900px) {
+  #container {
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  #graph {
+    flex: none;
+    height: 60vh;
+  }
+
+  #panel {
+    flex: none;
+    max-width: none;
+    min-width: 0;
+    height: 40vh;
+    border-left: none;
+    border-top: 1px solid #30363d;
+  }
+}
