@@ -170,6 +170,79 @@ d3.json("data.json")
     const overlay = d3.select("#overlay");
     const overlayContent = d3.select("#overlay-content");
 
+        // --- P1 UX: szczegóły węzła w prawym panelu (bez modala/overlay) ---
+    const panelTitleEl = document.getElementById("node-title");
+    const panelDescEl = document.getElementById("node-description");
+    const panelLinkEl = document.getElementById("node-link");
+    const viewControlsEl = document.getElementById("view-controls");
+    const filtersSectionEl = document.getElementById("filters");
+
+    const panelDefaults = {
+      title: panelTitleEl ? panelTitleEl.textContent : "",
+      desc: panelDescEl ? panelDescEl.textContent : "",
+      linkText: panelLinkEl ? panelLinkEl.textContent : "",
+      linkHref: panelLinkEl ? panelLinkEl.getAttribute("href") : "#",
+      linkDisplay: panelLinkEl ? panelLinkEl.style.display : "",
+    };
+
+    // Przycisk zamknięcia (tworzony dynamicznie, żeby nie ruszać index.html)
+    let panelCloseBtn = document.getElementById("panel-close-details");
+    if (!panelCloseBtn && panelTitleEl) {
+      panelCloseBtn = document.createElement("button");
+      panelCloseBtn.id = "panel-close-details";
+      panelCloseBtn.type = "button";
+      panelCloseBtn.textContent = "×";
+      panelCloseBtn.title = "Zamknij szczegóły";
+      panelCloseBtn.setAttribute("aria-label", "Zamknij szczegóły");
+
+      // wstaw przed tytułem
+      panelTitleEl.parentNode.insertBefore(panelCloseBtn, panelTitleEl);
+
+      // minimalny styl inline (tymczasowo). W kolejnym kroku przeniesiemy do style.css.
+      panelCloseBtn.style.cssText =
+        "float:right; margin:0 0 10px 10px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; " +
+        "border-radius:10px; width:34px; height:34px; font-size:22px; line-height:28px; cursor:pointer; display:none;";
+    }
+
+    function showPanelDetails(d) {
+      if (panelTitleEl) panelTitleEl.textContent = d.id || "—";
+      if (panelDescEl) panelDescEl.textContent = d.description || "—";
+
+      // Link (opcjonalny, tylko jeśli jest w danych)
+      const href = d.url || d.link || d.href;
+      if (panelLinkEl) {
+        if (href) {
+          panelLinkEl.textContent = "Otwórz link";
+          panelLinkEl.setAttribute("href", href);
+          panelLinkEl.style.display = "block";
+        } else {
+          panelLinkEl.textContent = "";
+          panelLinkEl.setAttribute("href", "#");
+          panelLinkEl.style.display = "none";
+        }
+      }
+
+      // ukryj sterowanie i filtry, pokaż X
+      if (viewControlsEl) viewControlsEl.style.display = "none";
+      if (filtersSectionEl) filtersSectionEl.style.display = "none";
+      if (panelCloseBtn) panelCloseBtn.style.display = "inline-flex";
+    }
+
+    function hidePanelDetails() {
+      if (panelTitleEl) panelTitleEl.textContent = panelDefaults.title;
+      if (panelDescEl) panelDescEl.textContent = panelDefaults.desc;
+
+      if (panelLinkEl) {
+        panelLinkEl.textContent = panelDefaults.linkText;
+        if (panelDefaults.linkHref) panelLinkEl.setAttribute("href", panelDefaults.linkHref);
+        panelLinkEl.style.display = panelDefaults.linkDisplay || "";
+      }
+
+      if (viewControlsEl) viewControlsEl.style.display = "";
+      if (filtersSectionEl) filtersSectionEl.style.display = "";
+      if (panelCloseBtn) panelCloseBtn.style.display = "none";
+    }
+
     const colorMap = {
       proces: "#00ffff",
       stan: "#00ff88",
@@ -284,6 +357,13 @@ d3.json("data.json")
         cb.addEventListener("change", () => {
           filterState[type] = cb.checked;
           applyFilters();
+              // Zamknięcie widoku szczegółów w panelu (wraca filtry + przyciski)
+    if (panelCloseBtn) {
+      panelCloseBtn.addEventListener("click", () => {
+        hidePanelDetails();
+        stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+      });
+    }
               // P1: sterowanie widokiem (reset / fit)
     const btnReset = document.getElementById("btn-reset-view");
     const btnFit = document.getElementById("btn-fit-view");
@@ -366,10 +446,7 @@ d3.json("data.json")
     node.on("click", (event, d) => {
       event.stopPropagation();
 
-      d3.select("#overlay-title").text(d.id);
-      d3.select("#overlay-description").text(d.description || "");
-
-      overlay.classed("hidden", false);
+           showPanelDetails(d);
 
             // TRYB KGR (UI-only): globalny puls + świecące relacje + gradient energii
       if (d.id === "KGR") {
