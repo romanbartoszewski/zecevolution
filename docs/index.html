@@ -15,7 +15,7 @@
     <h2 id="node-title">Wybierz węzeł</h2>
     <p id="node-description">Kliknij element grafu, aby zobaczyć opis.</p>
 
-    <!-- P0: jawny status ładowania/błędu danych (graph.js w kolejnym commicie będzie tym sterował) -->
+    <!-- P0: jawny status ładowania/błędu danych (graph.js tym steruje) -->
     <div id="status" role="status" aria-live="polite" style="margin-top:12px;">
       <div id="status-loading">Ładowanie danych…</div>
       <div id="status-error" style="display:none;">
@@ -24,6 +24,11 @@
     </div>
 
     <a id="node-link" href="#" target="_blank"></a>
+
+    <!-- P1 (krok 1): stały kontener na filtry (zamiast dynamicznego fixed div w JS) -->
+    <hr style="border:0;border-top:1px solid #30363d;margin:16px 0;" />
+    <h3 style="margin:0 0 8px 0;font-size:14px;color:#e6edf3;">Filtry</h3>
+    <div id="filters"></div>
   </div>
 </div>
 
