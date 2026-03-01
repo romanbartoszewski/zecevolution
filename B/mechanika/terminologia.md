@@ -30,11 +30,11 @@ Realizm jest instrumentalny: traktujemy węzły „jak realne”, bo to umożliw
 `s_{t+1} ~ F(s_t, x_t; θ)`
 
 ### Parametr (θ)
-**Parametr `θ`**: nastawa w ramach tej samej reguły/tej samej struktury (tuning).  
+**Parametr `θ`**: nastawa w ramach tej samej struktury reguły (tuning).  
 Zmiana `θ` nie zmienia formy reguły, tylko jej konfigurację.
 
-### Przestrzeń reguł / klasa reguł (𝓕) — definicja formalna robocza
-**`𝓕`** = rodzina reguł `{F_i}` o wspólnej roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły: np. operator, topologię, zestaw dopuszczalnych operacji/ograniczeń, generator reguł.
+### Przestrzeń reguł / klasa reguł (𝓕)
+**`𝓕`** = rodzina reguł `{F_i}` o wspólnej roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły: operator, topologię, zestaw dopuszczalnych operacji/ograniczeń, generator reguł.
 
 Intuicja:
 - `𝓕` = „zbiór form reguł”
@@ -44,9 +44,15 @@ Intuicja:
 - **Zmiana `θ` (tuning):** modyfikacja parametrów przy stałej strukturze reguły.
 - **Zmiana `𝓕` (meta-zmiana):** dodanie/usunięcie/zamiana struktury reguły (`F_i ↔ F_j`) lub modyfikacja generatora/ograniczeń zmieniająca zbiór dopuszczalnych form.
 
-**Test rozróżniający (operacyjny):**
-- jeśli po zmianie system zyskuje/utraca możliwość wykonywania klasy transformacji, której wcześniej nie miał (albo traci możliwość jej zaniechania) → traktujemy to jako zmianę `𝓕`;
-- jeśli zmienia się tylko „jak dobrze” w ramach tej samej formy → to zmiana `θ`.
+### Parametry zakresu (granica, która często udaje 𝓕)
+Wiele systemów ma parametry „zasięgu/zasobów” (np. głębokość search, horyzont planowania, budżet obliczeń).
+
+**Zasada:** jeśli zmienia się tylko zasięg/zasoby w ramach tego samego operatora (np. „ten sam algorytm, tylko głębiej/dłużej”), traktujemy to jako **θ**, nie `𝓕`.  
+Zmiana `𝓕` wymaga zmiany operatora/generatora/ograniczeń (zmiany formy), nie tylko „więcej/mniej tego samego”.
+
+### Test rozróżniający (operacyjny)
+- jeśli po zmianie system zyskuje/utraca możliwość wykonywania klasy transformacji, której wcześniej nie miał (albo traci możliwość jej zaniechania) → zmiana `𝓕`;
+- jeśli zmienia się tylko „jak dobrze / jak daleko” w ramach tej samej formy → zmiana `θ`.
 
 ---
 
@@ -61,8 +67,9 @@ Intuicja:
 ### Model kontrfaktyczny (wymagany dla KGR)
 **Model kontrfaktyczny**: przewiduje skutki hipotetycznych zmian w `𝓕` („co się stanie, jeśli zmienię formę reguł”), zanim zmiana zostanie wdrożona.
 
-Kryterium dowodowe (skrót):
-- w KGR nie uznajemy „implicit model” bez wykazania przewagi vs baseline i/lub ablacji funkcji modelu (szczegóły w specyfikacji).
+**Dowód funkcji M w KGR (skrót):**
+- przewaga vs baseline (C1) **oraz**
+- ablacja **lub zakłócenie** funkcji M (C3) pogarsza zdolność do meta-zmiany `𝓕`.
 
 ---
 
@@ -78,30 +85,35 @@ To nie jest „dowolny feedback”, tylko walidacja predykcji kontrfaktycznych.
 
 ---
 
-## 5) Próg (threshold)
-**Próg** w projekcie = stabilne wejście w pętlę `F→M→G→F` z walidacją `U`, a nie metafora.  
-Operacyjnie: domyślnie min. 3 pełne cykle + brak jednorazowego „fajerwerku”; dopuszczalne kryteria domenowe (okno czasowe, konwergencja).
+## 5) Stabilność i metryki (dla progu)
+- `J` = metryka celu (zależna od domeny).
+- `J_baseline` = wynik baseline (system bez M / bez kontrfaktycznej pętli).
+- `δ` = dopuszczalna degradacja poniżej baseline w cyklu (domyślnie `δ = 0`).
+
+Stabilność progu (domyślna): min. 3 pełne cykle + w każdym cyklu `J ≥ J_baseline − δ`.
 
 ---
 
 ## 6) KGR (skrót definicyjny)
 **KGR** = próg, przy którym system spełnia łącznie:
-- kontrfaktyczny self-model `M` (dowód: przewaga vs baseline **i** ablacja; patrz specyfikacja),
+- kontrfaktyczny self-model `M` (C1 + C3),
 - meta-kontrolę `G` zmieniającą `𝓕` (nie tylko `θ`),
 - walidację `U`,
 - stabilność progu.
 
-Źródło normatywne: `B/specyfikacje/kgr_threshold.md` (v0.5).
+KGR traktujemy jako własność czasową/epizodyczną: system może wejść w KGR i może z niego wypaść.
+
+Źródło normatywne: `B/specyfikacje/kgr_threshold.md` (v0.6).
 
 ---
 
 ## Implikacje systemowe:
-- Terminologia domyka „nóż” (θ vs 𝓕), więc spory o klasyfikację przypadków granicznych są rozstrzygalne.
-- Minimalizuje ryzyko „wszystko jest KGR”.
+- Terminologia domyka sporne przypadki „zakres vs nowy operator” (AlphaZero-like).
+- Stabilność jest policzalna (J_baseline, δ), więc mniej uznaniowości.
 
 ## Ryzyko:
-- Test rozróżniający wymaga jasnego opisu „możliwości klasy transformacji” w danej domenie.
-- W systemach społecznych nadal wysokie ryzyko błędu nośnika („ludzie mają model” ≠ „system ma model”).
+- Bez jasno zdefiniowanego `J` i baseline nadal będzie pole do manipulacji.
+- W systemach społecznych nadal wysokie ryzyko błędu nośnika.
 
 ## Czy naruszono poziomy C/B/A:
 - **C:** nie.
