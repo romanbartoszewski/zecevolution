@@ -55,5 +55,16 @@ Ryzyko regresji: brief może się rozjechać z pełną specyfikacją — wymaga 
   - dodano N4 („lookup-table kontrfaktyczność”) oraz doprecyzowano przypadki graniczne (m.in. model-based RL).
 - `B/brief_B.md` zsynchronizowano z v0.5.
 - `B/mechanika/terminologia.md` zsynchronizowano z v0.5 (θ vs 𝓕).
-Powód: odpowiedź na audyt (Grok+Claude): usunięcie nieostrości `𝓕` i ograniczenie fałszywych pozytywów dla `M`.  
-Ryzyko regresji: wyższy próg dowodowy (mniej systemów przejdzie jako KGR); w black-boxach ablacja może być trudna.
+Powód: odpowiedź na audyt: usunięcie nieostrości `𝓕` i ograniczenie fałszywych pozytywów dla `M`.  
+Ryzyko regresji: wyższy próg dowodowy; w black-boxach ablacja może być trudna.
+
+### [B] KGR v0.6 — uszczelnienie granic i stabilności
+- `B/specyfikacje/kgr_threshold.md` → v0.6:
+  - dodano rozróżnienie „parametry zakresu” (np. głębokość/horyzont/budżet) jako **θ**, nie `𝓕` (uszczelnienie sporu AlphaZero-like),
+  - C3 rozszerzono: **ablacja lub istotne zakłócenie funkcji M** (testowalność dla niemodularnych/black-box),
+  - stabilność progu sformalizowano metrycznie: `J ≥ J_baseline − δ` w każdym cyklu (koniec subiektywnego „fajerwerku”),
+  - doprecyzowano KGR jako własność czasową/epizodyczną.
+- `B/brief_B.md` zsynchronizowano z v0.6.
+- `B/mechanika/terminologia.md` zsynchronizowano z v0.6 (parametry zakresu, J_baseline/δ, C3 perturbation).
+Powód: odpowiedź na audyt round 2: luka θ/𝓕 przy zmianach zakresu, nietestowalność ablacji oraz uznaniowość stabilności.  
+Ryzyko regresji: konieczność jawnego zdefiniowania `J` i baseline w każdym teście; ryzyko nadużyć przy „zakłócaniu M”, jeśli nie jest dobrze opisane.
