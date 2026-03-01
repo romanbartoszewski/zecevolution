@@ -1,8 +1,8 @@
-# Architektura projektu (C / B / A)
+# Architektura projektu (C / B / A) + warstwa prezentacji
 
 ## 0) Status dokumentu
 Ten dokument definiuje strukturę repozytorium i reguły pracy warstwami **C / B / A**.  
-Jest normatywny organizacyjnie (jak porządkujemy treści), ale nie definiuje jeszcze ontologii.
+Jest normatywny organizacyjnie (jak porządkujemy treści), ale nie definiuje ontologii.
 
 ---
 
@@ -41,6 +41,7 @@ Lokalizacja:
 - `B/mechanika/` – terminologia i zasady
 - `B/specyfikacje/` – specyfikacje operacyjne (np. KGR threshold)
 - `B/kryteria/` – kryteria procesowe (np. kanonizacja)
+- `B/brief_B.md` – jednowiadomościowy brief do audytów
 
 ### A — ambicja ontologiczna (niezałożona)
 **Rola:** ewentualny rezultat emergentny, jeśli B wymusi jednoznaczne roszczenia ontologiczne.  
@@ -49,7 +50,18 @@ Na tym etapie A jest wyłącznie „rejestrem możliwych hipotez”, jeśli się
 
 ---
 
-## 3) Kanon i logi
+## 3) Warstwa prezentacji (poza C/B/A)
+### docs/ — interfejs (GitHub Pages)
+`docs/` zawiera statyczny interfejs projektu i jest publikowany przez GitHub Pages.  
+To jest warstwa **prezentacji/narzędzi**, nie warstwa definicji koncepcji.
+
+Zasady:
+- `docs/` nie jest ani C ani B (nie wprowadza definicji KGR).
+- UI może wizualizować dane/strukturę, ale „prawda definicyjna” jest w B.
+
+---
+
+## 4) Kanon i logi
 ### Kanon
 **Kanon** to lista elementów uznanych za „obowiązujące roboczo” po przejściu przez B.  
 Kryteria są w: `B/kryteria/kanonizacja.md`.
@@ -62,7 +74,7 @@ Lokalizacja:
 
 ---
 
-## 4) Zasady pracy (operacyjne)
+## 5) Zasady pracy (operacyjne)
 1) Nowe pomysły trafiają do **C**.
 2) Jeśli pomysł ma być używany jako definicja/teza w projekcie → musi zostać przepisany do **B**.
 3) Każda analiza kończy się sekcjami:
@@ -75,26 +87,29 @@ Lokalizacja:
 
 ---
 
-## 5) Źródło prawdy (dla asystentów / modeli)
-Jeśli prosimy modele (Claude/Grok/ChatGPT) o ocenę KGR lub pracę na definicjach:
+## 6) Źródło prawdy (dla asystentów / modeli)
+Jeśli prosimy modele o ocenę KGR lub pracę na definicjach:
 - Podajemy najpierw zestaw B:
   - `B/mechanika/terminologia.md`
   - `B/mechanika/zasady.md`
   - `B/specyfikacje/kgr_threshold.md`
+  - `B/brief_B.md`
   - (opcjonalnie) `B/kryteria/kanonizacja.md`
-- Treści z C podajemy tylko, jeśli prosimy o eksplorację lub generowanie hipotez.
+- Treści z C podajemy tylko, jeśli prosimy o eksplorację.
+
+`docs/` podajemy modelom tylko, jeśli pytanie dotyczy interfejsu/implementacji UI.
 
 ---
 
 ## Implikacje systemowe:
 - Repo wymusza separację heurystyki i definicji, co zmniejsza dryf i rebranding.
-- KGR jest oceniane przez B (specyfikacje + testy), nie przez narracje.
+- UI jest jawnie odseparowany od definicji, więc nie miesza poziomów.
 
 ## Ryzyko:
-- Jeśli zaczniemy wkładać definicje do C, wróci chaos semantyczny.
+- Jeśli zaczniemy wkładać definicje do `docs/`, wróci chaos semantyczny.
 - Jeśli kanon będzie rósł bez testów negatywnych, stanie się listą życzeń.
 
 ## Czy naruszono poziomy C/B/A:
 - **C:** nie.
 - **B:** tak (ustanowiono reguły operacyjne pracy).
-- **A:** nie (A jest zablokowane jako argument).
+- **A:** nie.
