@@ -1,10 +1,13 @@
-// P0: stabilne wymiary (na kontenerze, nie na viewport) + loading/error UX
+// P0/P1: stabilne wymiary (kontener #graph), loading/error UX, filtry w panelu (#filters)
 
 const graphEl = document.getElementById("graph");
 
-// Status UI (dodane w index.html)
+// Status UI (index.html)
 const statusLoadingEl = document.getElementById("status-loading");
 const statusErrorEl = document.getElementById("status-error");
+
+// Panel filtrów (index.html)
+const filtersEl = document.getElementById("filters");
 
 function setStatus({ loading, error }) {
   if (statusLoadingEl) statusLoadingEl.style.display = loading ? "block" : "none";
@@ -12,11 +15,15 @@ function setStatus({ loading, error }) {
 }
 
 function getGraphSize() {
-  // Jeśli #graph nie ma jeszcze rozmiaru (np. wstępny layout), fallback na viewport.
   const rect = graphEl ? graphEl.getBoundingClientRect() : null;
   const w = rect && rect.width ? rect.width : window.innerWidth;
   const h = rect && rect.height ? rect.height : window.innerHeight;
   return { width: Math.max(320, Math.floor(w)), height: Math.max(240, Math.floor(h)) };
+}
+
+function clearElement(el) {
+  if (!el) return;
+  while (el.firstChild) el.removeChild(el.firstChild);
 }
 
 let { width, height } = getGraphSize();
@@ -51,6 +58,7 @@ d3.json("data.json")
       meta: "#ffaa00",
     };
 
+    // Force
     const simulation = d3
       .forceSimulation(data.nodes)
       .force(
@@ -63,6 +71,7 @@ d3.json("data.json")
       .force("charge", d3.forceManyBody().strength(-400))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
+    // Links
     const link = container
       .append("g")
       .selectAll("line")
@@ -72,6 +81,7 @@ d3.json("data.json")
       .attr("stroke", "#444")
       .attr("stroke-width", 1.5);
 
+    // Nodes
     const node = container
       .append("g")
       .selectAll("circle")
@@ -90,6 +100,7 @@ d3.json("data.json")
           .on("end", dragended)
       );
 
+    // Labels
     const label = container
       .append("g")
       .selectAll("text")
@@ -101,50 +112,63 @@ d3.json("data.json")
       .attr("font-size", 14)
       .attr("text-anchor", "middle");
 
-    // FILTER PANEL (dynamicznie) — dług utrzymaniowy, ale nie ruszam w P0
-    const filterPanel = d3
-      .select("body")
-      .append("div")
-      .style("position", "fixed")
-      .style("top", "20px")
-      .style("right", "20px")
-      .style("background", "rgba(0,0,0,0.7)")
-      .style("padding", "15px")
-      .style("border", "1px solid #444");
+    // --- P1: FILTRY W PANELU (#filters), bez fixed div na body ---
+    const types = [...new Set((data.nodes || []).map((n) => n.type).filter(Boolean))];
 
-    const types = [...new Set(data.nodes.map((n) => n.type))];
+    // stan filtrów (one source of truth)
+    const filterState = Object.fromEntries(types.map((t) => [t, true]));
 
-    types.forEach((type) => {
-      const labelEl = filterPanel
-        .append("label")
-        .style("display", "block")
-        .style("color", "#ccc");
+    function applyFilters() {
+      node.style("display", (d) => (filterState[d.type] === false ? "none" : "block"));
+      label.style("display", (d) => (filterState[d.type] === false ? "none" : "block"));
 
-      labelEl
-        .append("input")
-        .attr("type", "checkbox")
-        .attr("checked", true)
-        .on("change", function () {
-          const visible = this.checked;
+      // Krawędzie: pokazuj tylko jeśli oba końce są widoczne (czytelniejsze i logiczniejsze)
+      link.style("display", (l) => {
+        const sType = l.source && l.source.type;
+        const tType = l.target && l.target.type;
+        const sOn = filterState[sType] !== false;
+        const tOn = filterState[tType] !== false;
+        return sOn && tOn ? "block" : "none";
+      });
+    }
 
-          node
-            .filter((d) => d.type === type)
-            .style("display", visible ? "block" : "none");
+    // render UI filtrów
+    if (filtersEl) {
+      clearElement(filtersEl);
 
-          // Uwaga: ta logika jest „na skróty” i przy wielu wyłączeniach typów bywa myląca.
-          // P1: przebudujemy to na stan filtrów + pełne przeliczenie widoczności.
-          link.style("display", (l) =>
-            (l.source.type === type || l.target.type === type) && !visible ? "none" : "block"
-          );
+      // minimalny markup bez inline CSS w JS (style dopniemy w style.css w kolejnym kroku)
+      types.forEach((type) => {
+        const row = document.createElement("label");
+        row.className = "filter-row";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = true;
+        cb.className = "filter-checkbox";
+        cb.addEventListener("change", () => {
+          filterState[type] = cb.checked;
+          applyFilters();
         });
 
-      labelEl
-        .append("span")
-        .text(" " + type)
-        .style("color", colorMap[type]);
-    });
+        const dot = document.createElement("span");
+        dot.className = "filter-dot";
+        dot.style.borderColor = colorMap[type] || "#ccc";
 
-    // KLIK WĘZŁA
+        const text = document.createElement("span");
+        text.className = "filter-text";
+        text.textContent = type;
+
+        row.appendChild(cb);
+        row.appendChild(dot);
+        row.appendChild(text);
+
+        filtersEl.appendChild(row);
+      });
+    }
+
+    applyFilters();
+
+    // Click node
     node.on("click", (event, d) => {
       event.stopPropagation();
 
@@ -153,7 +177,7 @@ d3.json("data.json")
 
       overlay.classed("hidden", false);
 
-      // TRYB KGR (UI-only)
+      // TRYB KGR (UI-only) — nie dotykamy definicji, tylko efekt wizualny
       if (d.id === "KGR") {
         simulation.alphaTarget(0.6).restart();
 
@@ -207,7 +231,7 @@ d3.json("data.json")
       d.fy = null;
     }
 
-    // P0: resize — przelicz rozmiar SVG i przestaw center force.
+    // Resize
     let resizeTimer = null;
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimer);
