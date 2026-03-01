@@ -357,13 +357,15 @@ d3.json("data.json")
         cb.addEventListener("change", () => {
           filterState[type] = cb.checked;
           applyFilters();
-              // Zamknięcie widoku szczegółów w panelu (wraca filtry + przyciski)
-    if (panelCloseBtn) {
-      panelCloseBtn.addEventListener("click", () => {
-        hidePanelDetails();
-        stopKgrMode({ simulation, nodeSel: node, linkSel: link });
-      });
-    }
+            // Zamknięcie widoku szczegółów w panelu (wraca filtry + przyciski)
+if (panelCloseBtn) {
+  panelCloseBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hidePanelDetails();
+    stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+  });
+}
               // P1: sterowanie widokiem (reset / fit)
     const btnReset = document.getElementById("btn-reset-view");
     const btnFit = document.getElementById("btn-fit-view");
