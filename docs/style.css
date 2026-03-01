@@ -47,6 +47,37 @@ body {
   display: none; /* nie pokazuj pustego linku */
 }
 
+/* Sterowanie widokiem grafu */
+#view-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+#view-controls button {
+  background: #0d1117;
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#view-controls button:hover {
+  border-color: #58a6ff;
+}
+
+#view-controls button:active {
+  transform: translateY(1px);
+}
+
+#view-controls button:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
+
 /* Status (loading/error) */
 #status {
   margin-top: 12px; /* inline w HTML jest OK, ale tu i tak standaryzujemy */
