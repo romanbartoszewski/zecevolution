@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zecevolucja – Dynamiczna Ontologia</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+
+<div id="container">
+  <div id="graph"></div>
+  <div id="panel">
+    <h2 id="node-title">Wybierz węzeł</h2>
+    <p id="node-description">Kliknij element grafu, aby zobaczyć opis.</p>
+    <a id="node-link" href="#" target="_blank"></a>
+  </div>
+</div>
+
+<script src="graph.js"></script>
+<div id="overlay" class="hidden">
+  <div id="overlay-content">
+    <h2 id="overlay-title"></h2>
+    <p id="overlay-description"></p>
+    <a id="overlay-link" href="#" target="_blank"></a>
+  </div>
+</div>
+
+</body>
+</html>

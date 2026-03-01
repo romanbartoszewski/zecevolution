@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    { "data": { "id": "proces", "label": "Proces", "type": "ontologia", "description": "Pierwotna rzeczywistość ma charakter procesualny." }},
+    { "data": { "id": "mozliwosci", "label": "Przestrzeń Możliwości", "type": "ontologia", "description": "Ewoluująca przestrzeń możliwych stanów." }},
+    { "data": { "id": "reorganizacja", "label": "Reorganizacja", "type": "mechanizm", "description": "Proces tworzenia nowych struktur stabilizacyjnych." }},
+    { "data": { "id": "kgr", "label": "KGR", "type": "przejscie", "description": "Krytyczna Gęstość Refleksyjna: przewidywanie + modyfikacja własnej architektury." }},
+    { "data": { "id": "waskie_gardlo", "label": "Wąskie Gardło", "type": "mechanizm", "description": "Rzadki etap stabilizacji refleksyjności." }},
+    { "data": { "id": "stabilizacja", "label": "Stabilizacja", "type": "przejscie", "description": "Utrzymanie KGR w stanie długotrwałym." }},
+    { "data": { "id": "autodestrukcja", "label": "Autodestrukcja", "type": "przejscie", "description": "Destabilizacja systemu przed stabilizacją KGR." }},
+    { "data": { "id": "slady", "label": "Ślady Probabilistyczne", "type": "hipoteza", "description": "Nieudane trajektorie zmieniają rozkład przyszłych prawdopodobieństw." }}
+  ],
+  "edges": [
+    { "data": { "source": "proces", "target": "reorganizacja" }},
+    { "data": { "source": "reorganizacja", "target": "mozliwosci" }},
+    { "data": { "source": "reorganizacja", "target": "kgr" }},
+    { "data": { "source": "kgr", "target": "waskie_gardlo" }},
+    { "data": { "source": "waskie_gardlo", "target": "stabilizacja" }},
+    { "data": { "source": "waskie_gardlo", "target": "autodestrukcja" }},
+    { "data": { "source": "autodestrukcja", "target": "slady" }},
+    { "data": { "source": "slady", "target": "mozliwosci" }}
+  ]
+}

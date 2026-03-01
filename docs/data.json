@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "Proces",
+      "type": "proces",
+      "description": "Rzeczywistość jako mechanizm reorganizacji w przestrzeni możliwych stanów."
+    },
+    {
+      "id": "KGR",
+      "type": "meta",
+      "description": "Krytyczna Gęstość Refleksyjna – punkt, w którym system modeluje i modyfikuje siebie."
+    },
+    {
+      "id": "Stabilizacja",
+      "type": "stan",
+      "description": "Rzadkie, ale kosmicznie nieuniknione przejście fazowe refleksyjności."
+    },
+    {
+      "id": "Autodestrukcja",
+      "type": "zagrożenie",
+      "description": "Zbyt szybka ingerencja prowadząca do destabilizacji systemu."
+    },
+    {
+      "id": "Ślady Probabilistyczne",
+      "type": "proces",
+      "description": "Przesunięcia prawdopodobieństw przyszłych trajektorii po nieudanych próbach."
+    }
+  ],
+  "links": [
+    { "source": "Proces", "target": "KGR" },
+    { "source": "KGR", "target": "Stabilizacja" },
+    { "source": "KGR", "target": "Autodestrukcja" },
+    { "source": "Autodestrukcja", "target": "Ślady Probabilistyczne" }
+  ]
+}
