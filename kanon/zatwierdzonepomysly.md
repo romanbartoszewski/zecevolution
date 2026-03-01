@@ -25,9 +25,9 @@ Każdy wpis ma formę:
 ## Zatwierdzone pozycje
 
 - **2026-03-01 — KGR: próg meta-reorganizacji (specyfikacja operacyjna)**  
-  Status: **v0.6 (robocze)**  
+  Status: **v0.7 (robocze)**  
   Źródło B: `B/specyfikacje/kgr_threshold.md`  
-  1–3 zdania: KGR to próg, przy którym system (a) posiada kontrfaktyczny self-model i (b) używa go do zmiany przestrzeni reguł `𝓕` (nie tylko tuningu `θ`), z walidacją predykcji i kryterium stabilności opartym o `J_baseline/δ`.  
-  Implikacje systemowe: Definicja jest odporna na rebranding przez „nóż” θ vs 𝓕 (z rozróżnieniem parametrów zakresu), twardy dowód funkcji M (C1+C3), oraz testy negatywne N1–N4.  
-  Ryzyko: Wymaga jawnego zdefiniowania `J` i baseline w każdej domenie; „zakłócenie M” musi być dobrze opisane, inaczej powstanie arbitralność.  
+  1–3 zdania: KGR to próg, przy którym system posiada kontrfaktyczny self-model `M_sys` i używa go do zmiany własnej przestrzeni reguł `𝓕_sys` (nie tylko tuningu `θ`), z walidacją predykcji i kryterium stabilności opartym o `J_baseline/δ` (z dopuszczalną jedną „doliną eksploracji”). Model obiektu (`𝓕_obj`) nie wystarcza.  
+  Implikacje systemowe: Definicja jest odporna na mylenie z MBRL (wymóg `𝓕_sys/M_sys`) oraz na „katalog NAS/lookup” (C4 novelty check), a testy negatywne N1–N5 domykają rebranding.  
+  Ryzyko: Wymaga jawnego rozdzielenia `𝓕_sys` vs `𝓕_obj` w każdej domenie oraz projektowania holdout form dla C4; inaczej wróci interpretacyjność.  
   Czy naruszono poziomy C/B/A: C – nie. B – tak. A – nie.
