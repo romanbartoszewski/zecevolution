@@ -23,7 +23,7 @@ Realizm jest instrumentalny: traktujemy węzły „jak realne”, bo to umożliw
 
 ---
 
-## 2) Dynamika i reguły
+## 2) Reguły i przestrzenie reguł
 
 ### Reguła (F)
 **Reguła `F`**: mechanizm przejścia mapujący `(s_t, x_t)` na `s_{t+1}` (lub rozkład stanów):  
@@ -33,87 +33,85 @@ Realizm jest instrumentalny: traktujemy węzły „jak realne”, bo to umożliw
 **Parametr `θ`**: nastawa w ramach tej samej struktury reguły (tuning).  
 Zmiana `θ` nie zmienia formy reguły, tylko jej konfigurację.
 
-### Przestrzeń reguł / klasa reguł (𝓕)
-**`𝓕`** = rodzina reguł `{F_i}` o wspólnej roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły: operator, topologię, zestaw dopuszczalnych operacji/ograniczeń, generator reguł.
+### Dwa obiekty: 𝓕_sys vs 𝓕_obj (kluczowe dla KGR)
+- **`𝓕_sys`**: przestrzeń reguł **własnych operacji systemu** (jedyna `𝓕` istotna dla KGR).
+- **`𝓕_obj`**: przestrzeń reguł modelowanego obiektu (środowisko, dane, kod, proces zewnętrzny).
 
-Intuicja:
-- `𝓕` = „zbiór form reguł”
-- `θ` = „nastawy w ramach formy”
+Model obiektu (`M_obj`) nie jest self-modelem. KGR wymaga self-modelu (`M_sys`) dotyczącego `𝓕_sys`.
 
-### Zmiana θ vs zmiana 𝓕 (nóż rozróżniający)
-- **Zmiana `θ` (tuning):** modyfikacja parametrów przy stałej strukturze reguły.
-- **Zmiana `𝓕` (meta-zmiana):** dodanie/usunięcie/zamiana struktury reguły (`F_i ↔ F_j`) lub modyfikacja generatora/ograniczeń zmieniająca zbiór dopuszczalnych form.
+### Przestrzeń reguł systemu (𝓕_sys)
+**`𝓕_sys`** = rodzina reguł `{F_i}` o wspólnej roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły: operator, topologia, zestaw dopuszczalnych operacji/ograniczeń, generator reguł.
 
-### Parametry zakresu (granica, która często udaje 𝓕)
-Wiele systemów ma parametry „zasięgu/zasobów” (np. głębokość search, horyzont planowania, budżet obliczeń).
+---
 
-**Zasada:** jeśli zmienia się tylko zasięg/zasoby w ramach tego samego operatora (np. „ten sam algorytm, tylko głębiej/dłużej”), traktujemy to jako **θ**, nie `𝓕`.  
-Zmiana `𝓕` wymaga zmiany operatora/generatora/ograniczeń (zmiany formy), nie tylko „więcej/mniej tego samego”.
+## 3) Nóż: zmiana θ vs zmiana 𝓕_sys
+
+### Zmiana θ (tuning)
+Zmiana parametrów `θ` przy stałej strukturze reguły.
+
+### Zmiana 𝓕_sys (meta-zmiana)
+Dodanie/usunięcie/zamiana struktury reguły (`F_i ↔ F_j`) lub modyfikacja generatora/ograniczeń zmieniająca zbiór dopuszczalnych form.
+
+### Parametry zakresu (granica, która często udaje 𝓕_sys)
+Jeśli zmienia się tylko zasięg/zasoby w ramach tego samego operatora (np. głębokość search, horyzont planowania, budżet), traktujemy to jako **θ**, nie `𝓕_sys`.  
+Zmiana `𝓕_sys` wymaga nowego operatora/generatora/ograniczeń (zmiany formy).
 
 ### Test rozróżniający (operacyjny)
-- jeśli po zmianie system zyskuje/utraca możliwość wykonywania klasy transformacji, której wcześniej nie miał (albo traci możliwość jej zaniechania) → zmiana `𝓕`;
+- jeśli po zmianie system zyskuje/utraca możliwość wykonywania klasy transformacji, której wcześniej nie miał (albo traci możliwość jej zaniechania) → zmiana `𝓕_sys`;
 - jeśli zmienia się tylko „jak dobrze / jak daleko” w ramach tej samej formy → zmiana `θ`.
 
 ---
 
-## 3) Modele wewnętrzne
+## 4) Modele i meta-poziom
 
-### Model (M)
-**Model `M`** = wewnętrzna struktura informacyjna wykorzystywana do przewidywania i/lub sterowania.
+### Self-model systemu (M_sys)
+**`M_sys`** = kontrfaktyczny model własnych reguł (`𝓕_sys`), używany do wyboru zmian `𝓕_sys` przed wdrożeniem.
 
-### Model opisowy
-**Model opisowy**: przewiduje stany `s` przy założeniu stałych reguł `F` / stałej `𝓕`.
+Dowód funkcji `M_sys` w KGR (skrót):
+- C1: przewaga vs baseline na zadaniach wymagających zmian `𝓕_sys`,
+- C3: ablacja lub zakłócenie `M_sys` pogarsza meta-zmiany `𝓕_sys`,
+- C4 (anty-katalog): poprawna ocena co najmniej jednej zmiany `𝓕_sys'` spoza wcześniej widzianego katalogu + walidacja po wdrożeniu.
 
-### Model kontrfaktyczny (wymagany dla KGR)
-**Model kontrfaktyczny**: przewiduje skutki hipotetycznych zmian w `𝓕` („co się stanie, jeśli zmienię formę reguł”), zanim zmiana zostanie wdrożona.
-
-**Dowód funkcji M w KGR (skrót):**
-- przewaga vs baseline (C1) **oraz**
-- ablacja **lub zakłócenie** funkcji M (C3) pogarsza zdolność do meta-zmiany `𝓕`.
-
----
-
-## 4) Meta-poziom
+### Model obiektu (M_obj)
+**`M_obj`** = model środowiska / danych / procesu zewnętrznego. Może być użyteczny, ale nie jest wystarczający dla KGR.
 
 ### Meta-kontrola (G)
-**Meta-kontrola `G`**: mechanizm, który wykorzystuje `M` do modyfikowania `𝓕` (nie tylko stanu, nie tylko `θ`).  
-To sterowanie **regułami**, nie tylko przebiegiem.
+**Meta-kontrola `G`**: mechanizm wykorzystujący `M_sys` do modyfikacji `𝓕_sys`.
 
-### Walidacja / aktualizacja (U)
-**Walidacja `U`**: mechanizm aktualizacji `M` na podstawie rozjazdu przewidywanie↔rzeczywistość po wdrożeniu zmiany `𝓕`.  
-To nie jest „dowolny feedback”, tylko walidacja predykcji kontrfaktycznych.
+### Walidacja (U)
+**Walidacja `U`**: aktualizacja `M_sys` na podstawie rozjazdu predykcja↔rzeczywistość po wdrożeniu zmiany `𝓕_sys`.
 
 ---
 
 ## 5) Stabilność i metryki (dla progu)
-- `J` = metryka celu (zależna od domeny).
-- `J_baseline` = wynik baseline (system bez M / bez kontrfaktycznej pętli).
+- `J` = metryka celu (domena).
+- `J_baseline` = wynik baseline.
 - `δ` = dopuszczalna degradacja poniżej baseline w cyklu (domyślnie `δ = 0`).
 
-Stabilność progu (domyślna): min. 3 pełne cykle + w każdym cyklu `J ≥ J_baseline − δ`.
+Stabilność progu (domyślna): min. 3 cykle; w oknie 3 cykli dopuszczalny max 1 cykl poniżej `J_baseline − δ`, z powrotem w kolejnym cyklu.
 
 ---
 
 ## 6) KGR (skrót definicyjny)
 **KGR** = próg, przy którym system spełnia łącznie:
-- kontrfaktyczny self-model `M` (C1 + C3),
-- meta-kontrolę `G` zmieniającą `𝓕` (nie tylko `θ`),
+- `M_sys` (C1 + C3 + C4),
+- meta-kontrolę `G` zmieniającą `𝓕_sys` (nie tylko `θ`),
 - walidację `U`,
 - stabilność progu.
 
-KGR traktujemy jako własność czasową/epizodyczną: system może wejść w KGR i może z niego wypaść.
+KGR jest własnością czasową/epizodyczną.
 
-Źródło normatywne: `B/specyfikacje/kgr_threshold.md` (v0.6).
+Źródło normatywne: `B/specyfikacje/kgr_threshold.md` (v0.7).
 
 ---
 
 ## Implikacje systemowe:
-- Terminologia domyka sporne przypadki „zakres vs nowy operator” (AlphaZero-like).
-- Stabilność jest policzalna (J_baseline, δ), więc mniej uznaniowości.
+- Rozróżnienie `𝓕_sys` vs `𝓕_obj` domyka największą lukę (MBRL jako „model obiektu”).
+- C4 blokuje „katalog NAS/lookup” bez wprowadzania intencjonalności.
 
 ## Ryzyko:
-- Bez jasno zdefiniowanego `J` i baseline nadal będzie pole do manipulacji.
-- W systemach społecznych nadal wysokie ryzyko błędu nośnika.
+- W praktyce trzeba jawnie opisywać, co jest `𝓕_sys` w danej domenie.
+- Projektowanie holdout form (C4) wymaga dyscypliny, inaczej będzie udawane.
 
 ## Czy naruszono poziomy C/B/A:
 - **C:** nie.
