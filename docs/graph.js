@@ -36,11 +36,10 @@ const svg = d3
 
 const container = svg.append("g");
 
-svg.call(
-  d3.zoom().on("zoom", (event) => {
-    container.attr("transform", event.transform);
-  })
-);
+const zoom = d3.zoom().on("zoom", (event) => {
+  container.attr("transform", event.transform);
+});
+svg.call(zoom);
 
 setStatus({ loading: true, error: false });
 
@@ -148,6 +147,64 @@ d3.json("data.json")
         cb.addEventListener("change", () => {
           filterState[type] = cb.checked;
           applyFilters();
+              // P1: sterowanie widokiem (reset / fit)
+    const btnReset = document.getElementById("btn-reset-view");
+    const btnFit = document.getElementById("btn-fit-view");
+
+    if (btnReset) {
+      btnReset.addEventListener("click", () => {
+        svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
+      });
+    }
+
+    if (btnFit) {
+      btnFit.addEventListener("click", () => {
+        // jeśli nie ma pozycji (np. przed pierwszym tick), zrób szybki restart
+        simulation.alpha(0.2).restart();
+
+        // bounding box na podstawie aktualnych x/y węzłów
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        for (const n of data.nodes) {
+          const x = n.x;
+          const y = n.y;
+          if (typeof x !== "number" || typeof y !== "number") continue;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+
+        if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+          // fallback: reset jeśli nie da się policzyć bbox
+          svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
+          return;
+        }
+
+        const graphW = maxX - minX;
+        const graphH = maxY - minY;
+
+        // margines w ekranie
+        const pad = 60;
+        const scale = Math.min(
+          4, // górny limit zoom-in, żeby nie przesadzić
+          Math.max(
+            0.1,
+            Math.min((width - pad) / graphW, (height - pad) / graphH)
+          )
+        );
+
+        const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
+
+        const transform = d3.zoomIdentity
+          .translate(width / 2, height / 2)
+          .scale(scale)
+          .translate(-midX, -midY);
+
+        svg.transition().duration(350).call(zoom.transform, transform);
+      });
+    }
         });
 
         const dot = document.createElement("span");
