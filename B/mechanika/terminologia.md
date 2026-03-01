@@ -2,9 +2,9 @@
 
 ## 0) Status dokumentu
 Warstwa: **B (operacyjna)**  
-Cel: ujednolicić znaczenia pojęć używanych w projekcie (żeby uniknąć dryfu semantycznego i rebrandingu).
+Cel: ujednolicić znaczenia pojęć używanych w projekcie (redukcja dryfu semantycznego i rebrandingu).
 
-Zasada: jeśli termin jest używany w B, musi mieć definicję operacyjną tutaj lub w specyfikacji.
+Zasada: jeśli termin jest używany normatywnie w B, musi mieć definicję operacyjną tutaj lub w specyfikacji.
 
 ---
 
@@ -19,7 +19,7 @@ Realizm jest instrumentalny: traktujemy węzły „jak realne”, bo to umożliw
 - stany `s_t`,
 - wejścia/zakłócenia `x_t`,
 - transformacje/reguły `F`,
-- kanały wpływu (przyczynowość operacyjna: „zmiana A powoduje zmianę B w obserwowalny sposób”).
+- kanały wpływu (operacyjnie: zmiana A powoduje obserwowalną zmianę B).
 
 ---
 
@@ -30,19 +30,23 @@ Realizm jest instrumentalny: traktujemy węzły „jak realne”, bo to umożliw
 `s_{t+1} ~ F(s_t, x_t; θ)`
 
 ### Parametr (θ)
-**Parametr `θ`**: nastawa w ramach tej samej reguły/tej samej klasy reguł (tuning).  
+**Parametr `θ`**: nastawa w ramach tej samej reguły/tej samej struktury (tuning).  
 Zmiana `θ` nie zmienia formy reguły, tylko jej konfigurację.
 
-### Klasa reguł (𝓕)
-**Klasa reguł `𝓕`**: zbiór dopuszczalnych reguł (rodzina modeli/architektur/operatorów/ograniczeń), np.:
-- regulatory klasy PID,
-- sieci o danej topologii,
-- program z danym zestawem instrukcji,
-- zbiór polityk decyzyjnych o określonej formie.
+### Przestrzeń reguł / klasa reguł (𝓕) — definicja formalna robocza
+**`𝓕`** = rodzina reguł `{F_i}` o wspólnej roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły: np. operator, topologię, zestaw dopuszczalnych operacji/ograniczeń, generator reguł.
 
-### Zmiana klasy reguł (𝓕_i → 𝓕_j)
-**Zmiana klasy reguł**: przejście między rodzinami reguł (zmiana formy/architektury/operatorów/ograniczeń), a nie tylko tuning `θ`.  
-To jest kluczowe rozróżnienie od adaptacji „parametrycznej”.
+Intuicja:
+- `𝓕` = „zbiór form reguł”
+- `θ` = „nastawy w ramach formy”
+
+### Zmiana θ vs zmiana 𝓕 (nóż rozróżniający)
+- **Zmiana `θ` (tuning):** modyfikacja parametrów przy stałej strukturze reguły.
+- **Zmiana `𝓕` (meta-zmiana):** dodanie/usunięcie/zamiana struktury reguły (`F_i ↔ F_j`) lub modyfikacja generatora/ograniczeń zmieniająca zbiór dopuszczalnych form.
+
+**Test rozróżniający (operacyjny):**
+- jeśli po zmianie system zyskuje/utraca możliwość wykonywania klasy transformacji, której wcześniej nie miał (albo traci możliwość jej zaniechania) → traktujemy to jako zmianę `𝓕`;
+- jeśli zmienia się tylko „jak dobrze” w ramach tej samej formy → to zmiana `θ`.
 
 ---
 
@@ -52,55 +56,52 @@ To jest kluczowe rozróżnienie od adaptacji „parametrycznej”.
 **Model `M`** = wewnętrzna struktura informacyjna wykorzystywana do przewidywania i/lub sterowania.
 
 ### Model opisowy
-**Model opisowy**: przewiduje stany `s` przy założeniu stałych reguł `F` / stałej klasy `𝓕`.
+**Model opisowy**: przewiduje stany `s` przy założeniu stałych reguł `F` / stałej `𝓕`.
 
 ### Model kontrfaktyczny (wymagany dla KGR)
-**Model kontrfaktyczny**: przewiduje skutki hipotetycznych zmian w `F` lub `𝓕` („co się stanie, jeśli zmienię regułę / klasę reguł”), zanim zmiana zostanie wykonana.
+**Model kontrfaktyczny**: przewiduje skutki hipotetycznych zmian w `𝓕` („co się stanie, jeśli zmienię formę reguł”), zanim zmiana zostanie wdrożona.
 
-Kryterium operacyjne:
-- jeśli system nie potrafi wykazać przewagi w zadaniach wymagających zmian reguł (vs baseline bez-modelowy), to „model kontrfaktyczny” jest pustą etykietą.
+Kryterium dowodowe (skrót):
+- w KGR nie uznajemy „implicit model” bez wykazania przewagi vs baseline i/lub ablacji funkcji modelu (szczegóły w specyfikacji).
 
 ---
 
 ## 4) Meta-poziom
 
 ### Meta-kontrola (G)
-**Meta-kontrola `G`**: mechanizm, który wykorzystuje `M` do modyfikowania `F` lub `𝓕` (wybór/konstruowanie reguł).  
-To nie jest zwykłe sterowanie stanem, tylko sterowanie **regułami**.
+**Meta-kontrola `G`**: mechanizm, który wykorzystuje `M` do modyfikowania `𝓕` (nie tylko stanu, nie tylko `θ`).  
+To sterowanie **regułami**, nie tylko przebiegiem.
 
 ### Walidacja / aktualizacja (U)
-**Walidacja `U`**: mechanizm aktualizacji `M` na podstawie błędu predykcji po zmianach w systemie (różnica przewidywanie↔rzeczywistość).
+**Walidacja `U`**: mechanizm aktualizacji `M` na podstawie rozjazdu przewidywanie↔rzeczywistość po wdrożeniu zmiany `𝓕`.  
+To nie jest „dowolny feedback”, tylko walidacja predykcji kontrfaktycznych.
 
 ---
 
 ## 5) Próg (threshold)
-**Próg** w projekcie = nie tylko metafora.  
-Operacyjnie oznacza nieciągłość lub stabilne przekroczenie wskaźnika, który:
-- koreluje z pojawieniem się pętli `F → M → G → F`,
-- oraz daje przewagę funkcjonalną (np. `Ψ > 0` względem baseline).
-
-W KGR używamy wskaźników `Φ/Ψ/Ω` (zob. `B/specyfikacje/kgr_threshold.md`).
+**Próg** w projekcie = stabilne wejście w pętlę `F→M→G→F` z walidacją `U`, a nie metafora.  
+Operacyjnie: domyślnie min. 3 pełne cykle + brak jednorazowego „fajerwerku”; dopuszczalne kryteria domenowe (okno czasowe, konwergencja).
 
 ---
 
 ## 6) KGR (skrót definicyjny)
 **KGR** = próg, przy którym system spełnia łącznie:
-- kontrfaktyczny self-model `M`,
-- meta-kontrolę `G` zmieniającą `F` lub `𝓕` (nie tylko `θ`),
+- kontrfaktyczny self-model `M` (dowód: przewaga vs baseline **i** ablacja; patrz specyfikacja),
+- meta-kontrolę `G` zmieniającą `𝓕` (nie tylko `θ`),
 - walidację `U`,
-- oraz kryterium progu (wg `Φ/Ψ/Ω` i testów N1/N2/P).
+- stabilność progu.
 
-Źródło normatywne: `B/specyfikacje/kgr_threshold.md`.
+Źródło normatywne: `B/specyfikacje/kgr_threshold.md` (v0.5).
 
 ---
 
 ## Implikacje systemowe:
-- Terminologia wymusza rozróżnienie: tuning parametrów vs zmiana klasy reguł.
-- Zmniejsza pole do „interpretacji” (np. wszystko jako „implicit model”).
+- Terminologia domyka „nóż” (θ vs 𝓕), więc spory o klasyfikację przypadków granicznych są rozstrzygalne.
+- Minimalizuje ryzyko „wszystko jest KGR”.
 
 ## Ryzyko:
-- Jeśli definicje będą naginane do przykładów, terminologia stanie się dekoracją (a nie narzędziem).
-- W systemach społecznych łatwo o błąd nośnika („ludzie mają model” ≠ „system ma model”).
+- Test rozróżniający wymaga jasnego opisu „możliwości klasy transformacji” w danej domenie.
+- W systemach społecznych nadal wysokie ryzyko błędu nośnika („ludzie mają model” ≠ „system ma model”).
 
 ## Czy naruszono poziomy C/B/A:
 - **C:** nie.
