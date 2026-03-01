@@ -38,11 +38,22 @@ Ryzyko regresji: wzrost objętości specyfikacji; ryzyko duplikacji mini-spec w 
 
 ### [B] Kanonizacja i kanon
 - `B/kryteria/kanonizacja.md`: dodano kryteria przejścia C → B → kanon + anty-bullshit.
-- `kanon/zatwierdzonepomysly.md`: ustandaryzowano format wpisów (data, status, linki do B) oraz dodano pozycję KGR (v0.3/robocze).
+- `kanon/zatwierdzonepomysly.md`: ustandaryzowano format wpisów (data, status, linki do B) oraz dodano pozycję KGR (robocze).
 Powód: kanon jako wynik procesu, nie lista życzeń.  
 Ryzyko regresji: kanon może rosnąć bez testów negatywnych, jeśli procedura będzie ignorowana.
 
 ### [B] Brief jednowiadomościowy
-- `B/brief_B.md`: dodano 1-stronicowy brief B do audytów przez modele (Claude/Grok).
+- `B/brief_B.md`: dodano 1-stronicowy brief B do audytów przez modele.
 Powód: skrócenie procesu audytu bez kopiowania wielu plików.  
 Ryzyko regresji: brief może się rozjechać z pełną specyfikacją — wymaga utrzymania spójności.
+
+### [B] KGR v0.5 — zaostrzenie „noża” i dowodu dla M
+- `B/specyfikacje/kgr_threshold.md` → v0.5:
+  - zdefiniowano `𝓕` formalnie jako rodzinę struktur reguł `{F_i}` + test rozróżniający θ vs 𝓕,
+  - zmieniono kryterium dowodowe `M`: z OR na wymóg **C1 AND C3** (C2 pomocnicze),
+  - doprecyzowano stabilność progu: N=3 jako domyślny minimum + warunek anty-„fajerwerk” + możliwość kryterium domenowego,
+  - dodano N4 („lookup-table kontrfaktyczność”) oraz doprecyzowano przypadki graniczne (m.in. model-based RL).
+- `B/brief_B.md` zsynchronizowano z v0.5.
+- `B/mechanika/terminologia.md` zsynchronizowano z v0.5 (θ vs 𝓕).
+Powód: odpowiedź na audyt (Grok+Claude): usunięcie nieostrości `𝓕` i ograniczenie fałszywych pozytywów dla `M`.  
+Ryzyko regresji: wyższy próg dowodowy (mniej systemów przejdzie jako KGR); w black-boxach ablacja może być trudna.
