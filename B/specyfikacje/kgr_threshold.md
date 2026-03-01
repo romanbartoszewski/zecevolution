@@ -28,6 +28,8 @@ W tej specyfikacji rozróżniamy:
 **KGR dotyczy wyłącznie `𝓕_sys`.**  
 System może modelować `𝓕_obj`, ale KGR zachodzi dopiero, gdy używa tego do zmiany `𝓕_sys`.
 
+Dla systemów hybrydowych: zmiana subkomponentu liczy się jako zmiana `𝓕_sys` tylko wtedy, gdy modyfikuje operacje przetwarzania systemu jako całości (ścieżki decyzyjne/wnioskowania), a nie wyłącznie zachowanie izolowanego modułu wobec danych zewnętrznych.
+
 ### 2.2 Reguła, parametr, przestrzeń reguł
 - **Reguła `F`**: mechanizm przejścia mapujący stan i wejścia na następny stan (lub dystrybucję stanów):  
   `s_{t+1} ~ F(s_t, x_t; θ)`
