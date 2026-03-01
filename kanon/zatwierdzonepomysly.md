@@ -12,7 +12,7 @@ Wejście do kanonu wymaga spełnienia kryteriów z: `B/kryteria/kanonizacja.md`.
 Każdy wpis ma formę:
 
 - **YYYY-MM-DD — [Nazwa pozycji]**  
-  Status: (np. v0.3 / robocze / stabilne)  
+  Status: (np. v0.x / robocze / stabilne)  
   Źródło B: `ścieżka/do/pliku.md`  
   Źródło C (opcjonalnie): `ścieżka/do/pliku.md`  
   1–3 zdania: *co to jest i po co istnieje*  
@@ -25,9 +25,9 @@ Każdy wpis ma formę:
 ## Zatwierdzone pozycje
 
 - **2026-03-01 — KGR: próg meta-reorganizacji (specyfikacja operacyjna)**  
-  Status: v0.3 (robocze)  
+  Status: **v0.6 (robocze)**  
   Źródło B: `B/specyfikacje/kgr_threshold.md`  
-  1–3 zdania: KGR to próg, przy którym system utrzymuje kontrfaktyczny self-model i używa go do zmiany przestrzeni reguł (nie tylko tuningu), z walidacją zwrotną.  
-  Implikacje systemowe: Umożliwia test destrukcyjny „czy to tylko rebranding” poprzez warunek odróżniający (zmiana klasy reguł) oraz wskaźniki progu (Φ/Ψ/Ω).  
-  Ryzyko: Źle dobrany baseline i nieprecyzyjna miara wpływu mogą fałszywie „udowodnić” KGR.  
+  1–3 zdania: KGR to próg, przy którym system (a) posiada kontrfaktyczny self-model i (b) używa go do zmiany przestrzeni reguł `𝓕` (nie tylko tuningu `θ`), z walidacją predykcji i kryterium stabilności opartym o `J_baseline/δ`.  
+  Implikacje systemowe: Definicja jest odporna na rebranding przez „nóż” θ vs 𝓕 (z rozróżnieniem parametrów zakresu), twardy dowód funkcji M (C1+C3), oraz testy negatywne N1–N4.  
+  Ryzyko: Wymaga jawnego zdefiniowania `J` i baseline w każdej domenie; „zakłócenie M” musi być dobrze opisane, inaczej powstanie arbitralność.  
   Czy naruszono poziomy C/B/A: C – nie. B – tak. A – nie.
