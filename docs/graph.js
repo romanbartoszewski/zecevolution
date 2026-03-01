@@ -36,10 +36,130 @@ const svg = d3
 
 const container = svg.append("g");
 
+let currentTransform = d3.zoomIdentity;
+
+function applyTransform(pulseScale = 1) {
+  // Skalowanie "wokół środka ekranu", żeby puls nie powodował dryfu
+  const cx = width / 2;
+  const cy = height / 2;
+
+  const p = pulseScale;
+  const x = cx - (cx - currentTransform.x) * p;
+  const y = cy - (cy - currentTransform.y) * p;
+  const k = currentTransform.k * p;
+
+  container.attr("transform", `translate(${x},${y}) scale(${k})`);
+}
+
 const zoom = d3.zoom().on("zoom", (event) => {
-  container.attr("transform", event.transform);
+  currentTransform = event.transform;
+  applyTransform(1);
 });
 svg.call(zoom);
+
+// --- P1: Tryb KGR (UI-only): puls, drżenie relacji, animowany gradient energii ---
+const defs = svg.append("defs");
+
+// Glow dla relacji
+defs
+  .append("filter")
+  .attr("id", "kgrGlow")
+  .attr("x", "-50%")
+  .attr("y", "-50%")
+  .attr("width", "200%")
+  .attr("height", "200%")
+  .call((f) => {
+    f.append("feGaussianBlur")
+      .attr("in", "SourceGraphic")
+      .attr("stdDeviation", 2.2)
+      .attr("result", "blur");
+    f.append("feMerge").call((m) => {
+      m.append("feMergeNode").attr("in", "blur");
+      m.append("feMergeNode").attr("in", "SourceGraphic");
+    });
+  });
+
+// Gradient energii (animowany przez gradientTransform)
+const energyGradient = defs
+  .append("linearGradient")
+  .attr("id", "kgrEnergy")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", 0)
+  .attr("y1", 0)
+  .attr("x2", 220)
+  .attr("y2", 0);
+
+energyGradient.append("stop").attr("offset", "0%").attr("stop-color", "#ffaa00").attr("stop-opacity", 0.95);
+energyGradient.append("stop").attr("offset", "50%").attr("stop-color", "#00ffff").attr("stop-opacity", 0.95);
+energyGradient.append("stop").attr("offset", "100%").attr("stop-color", "#ffaa00").attr("stop-opacity", 0.95);
+
+let kgrMode = false;
+let kgrTimer = null;
+
+function startKgrMode({ simulation, nodeSel, linkSel }) {
+  if (kgrMode) return;
+  kgrMode = true;
+
+  // "więcej energii"
+  simulation.alphaTarget(0.6).restart();
+
+  // podkreśl KGR
+  nodeSel
+    .transition()
+    .duration(250)
+    .attr("r", (n) => (n.id === "KGR" ? 28 : 18));
+
+  // relacje: glow + gradient
+  linkSel
+    .attr("filter", "url(#kgrGlow)")
+    .attr("stroke", "url(#kgrEnergy)");
+
+  const t0 = performance.now();
+
+  kgrTimer = d3.timer(() => {
+    const t = (performance.now() - t0) / 1000;
+
+    // globalne pulsowanie: delikatne (fazowe)
+    const pulse = 1 + Math.sin(t * 2.6) * 0.012;
+    applyTransform(pulse);
+
+    // "drżenie relacji": modulacja grubości i opacity + przesuw gradientu
+    const wobble = 1 + Math.sin(t * 11.0) * 0.18;
+    linkSel
+      .attr("stroke-width", 1.35 * wobble)
+      .attr("stroke-opacity", 0.55 + 0.25 * Math.sin(t * 6.0));
+
+    const offset = (t * 90) % 220;
+    energyGradient.attr("gradientTransform", `translate(${offset},0)`);
+  });
+}
+
+function stopKgrMode({ simulation, nodeSel, linkSel }) {
+  if (!kgrMode) return;
+  kgrMode = false;
+
+  simulation.alphaTarget(0);
+
+  // wyłącz timer
+  if (kgrTimer) {
+    kgrTimer.stop();
+    kgrTimer = null;
+  }
+
+  // wróć do normalnego transformu (bez pulsu)
+  applyTransform(1);
+
+  // reset wyglądu
+  nodeSel.transition().duration(250).attr("r", 18);
+
+  linkSel
+    .attr("filter", null)
+    .attr("stroke", "#444")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-opacity", 1);
+
+  energyGradient.attr("gradientTransform", "translate(0,0)");
+}
 
 setStatus({ loading: true, error: false });
 
@@ -251,29 +371,18 @@ d3.json("data.json")
 
       overlay.classed("hidden", false);
 
-      // TRYB KGR (UI-only) — nie dotykamy definicji, tylko efekt wizualny
+            // TRYB KGR (UI-only): globalny puls + świecące relacje + gradient energii
       if (d.id === "KGR") {
-        simulation.alphaTarget(0.6).restart();
-
-        node
-          .transition()
-          .duration(300)
-          .attr("r", (n) => (n.id === "KGR" ? 28 : 18));
-
-        link
-          .transition()
-          .duration(300)
-          .attr("stroke", (l) =>
-            l.source.id === "KGR" || l.target.id === "KGR" ? "#ffaa00" : "#444"
-          );
+        startKgrMode({ simulation, nodeSel: node, linkSel: link });
       } else {
-        simulation.alphaTarget(0);
-        node.transition().duration(300).attr("r", 18);
-        link.transition().duration(300).attr("stroke", "#444");
+        stopKgrMode({ simulation, nodeSel: node, linkSel: link });
       }
     });
 
-    overlay.on("click", () => overlay.classed("hidden", true));
+    overlay.on("click", () => {
+  overlay.classed("hidden", true);
+  stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+});
     overlayContent.on("click", (e) => e.stopPropagation());
         // UX: Esc zamyka overlay
     document.addEventListener("keydown", (e) => {
