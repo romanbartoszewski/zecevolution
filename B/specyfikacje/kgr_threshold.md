@@ -1,4 +1,4 @@
-# KGR – Krytyczna Gęstość Refleksyjna - próg meta-reorganizacji (specyfikacja operacyjna v0.4)
+# KGR – próg meta-reorganizacji (specyfikacja operacyjna v0.5)
 
 ## 0) Status dokumentu
 Warstwa: **B (operacyjna)**  
@@ -8,7 +8,7 @@ Ten dokument jest źródłem normatywnym dla użycia terminu **KGR** w projekcie
 ---
 
 ## 1) Zakres i założenia
-- **Węzeł** = jednostka strukturalna analizy; realizm wyłącznie **instrumentalny** (traktujemy „jak realne”, bo to umożliwia testy; brak roszczeń metafizycznych).
+- **Węzeł** = jednostka strukturalna analizy; realizm wyłącznie **instrumentalny**.
 - **System** = układ z dynamiką w czasie, z wyodrębnialnymi stanami, transformacjami i kanałami wpływu.
 - KGR to **warunek strukturalno-funkcjonalny**, nie etykieta narracyjna.
 
@@ -16,156 +16,118 @@ Ten dokument jest źródłem normatywnym dla użycia terminu **KGR** w projekcie
 
 ## 2) Definicje minimalne (B)
 
-### 2.1 Reguła, przestrzeń reguł, klasa reguł
+### 2.1 Reguła, parametr, przestrzeń reguł
 - **Reguła `F`**: mechanizm przejścia mapujący stan i wejścia na następny stan (lub dystrybucję stanów):  
   `s_{t+1} ~ F(s_t, x_t; θ)`
-- **Parametry `θ`**: nastawy w ramach tej samej reguły/tej samej klasy (tuning).
-- **Klasa reguł `𝓕`**: zbiór dopuszczalnych reguł (rodzina modeli/architektur/operatorów/ograniczeń).
-- **Przestrzeń reguł**: to, co może zostać zmienione na poziomie `F`/`𝓕` (forma reguły, topologia, operator, ograniczenia, generator reguł) – nie tylko `θ`.
-- **Zmiana klasy reguł**: przejście `𝓕_i → 𝓕_j` (zmiana formy reguł/architektury/operatorów/ograniczeń), a nie tylko `θ` w obrębie `𝓕_i`.
+- **Parametry `θ`**: nastawy w ramach tej samej reguły/tej samej struktury.
+- **Przestrzeń reguł `𝓕` (definicja formalna robocza)**: rodzina reguł `{F_i}` o wspólnej funkcji roli (mapowanie `S×X→S`), gdzie `i` indeksuje **strukturę** reguły (np. operator, topologia, zestaw dopuszczalnych operacji/ograniczeń, generator reguł).  
+  Intuicja: `𝓕` to „zbiór form”, a `θ` to „nastawy w ramach formy”.
 
-**Warunek odróżniający KGR od adaptacji:** KGR wymaga zmiany *przestrzeni reguł* (`F` lub `𝓕`) albo mechanizmu generowania reguł, nie tylko strojenia parametrów.
+**Zmiana `θ` (tuning):** modyfikacja parametrów przy stałej strukturze reguły.  
+**Zmiana `𝓕` (meta-zmiana):** dodanie/usunięcie/zamiana struktury reguły (`F_i ↔ F_j`) lub modyfikacja generatora reguł / operatorów / ograniczeń w sposób, który zmienia zbiór dopuszczalnych form.
 
-### 2.2 Model własny (self-model) – operacyjnie
-- **Model własny `M`**: wewnętrzna struktura informacyjna umożliwiająca przewidywanie skutków **kontrfaktycznych** zmian w `F` lub `𝓕` (tj. „co się stanie, jeśli zmienię regułę” zanim zmiana zostanie wykonana).
-
-Rozróżnienie:
-- **Model opisowy**: przewiduje stany przy stałych regułach `F`/stałej `𝓕`.
-- **Model kontrfaktyczny (wymagany w KGR)**: przewiduje skutki zmian reguł/klasy reguł.
-
-### 2.3 Meta-kontrola i walidacja
-- **Meta-kontrola `G`**: mechanizm, który używa `M` do modyfikowania `F` lub `𝓕` (wybór/konstruowanie reguł).
-- **Walidacja `U`**: mechanizm aktualizacji `M` na podstawie błędu predykcji po zmianach reguł.
+**Test rozróżniający (operacyjny):**
+- jeśli po modyfikacji system uzyskuje/utraca **możliwość** wykonywania klasy transformacji, której wcześniej nie miał (albo przestaje być w stanie jej nie wykonywać), traktujemy to jako zmianę `𝓕`;
+- jeśli zmienia się tylko „jak dobrze” w ramach tej samej formy — to zmiana `θ`.
 
 ---
 
 ## 3) Definicja KGR (B-min)
 System osiąga **KGR** wtedy i tylko wtedy, gdy spełnia łącznie:
 
-1) **Kontrfaktyczny self-model `M`**: system potrafi generować i oceniać przewidywania skutków zmian w `F` lub `𝓕`.  
-2) **Meta-kontrola `G`**: wnioski z `M` powodują zmiany w `F` lub `𝓕` (nie tylko parametry `θ`).  
-3) **Sprzężenie walidacyjne `U`**: po zmianie reguł system aktualizuje `M` i/lub kryteria `G` na podstawie różnic przewidywanie↔rzeczywistość.
+1) **Kontrfaktyczny self-model `M`**: system potrafi generować i oceniać przewidywania skutków zmian w `F` lub `𝓕` **przed** wdrożeniem.  
+2) **Meta-kontrola `G`**: wnioski z `M` powodują zmianę `𝓕` (nie tylko tuning `θ`).  
+3) **Walidacja `U`**: po zmianie `𝓕` system porównuje przewidywania `M` z rzeczywistością i aktualizuje `M` i/lub kryteria `G`.  
+4) **Próg/stabilność**: 1–3 zachodzą stabilnie wg kryterium z sekcji 6.
 
 Wymagana pętla:
 `F → M → G → F` oraz `F → U → M`.
 
 ---
 
-## 4) Kryteria operacyjne dla kluczowych warunków (domknięcie)
+## 4) Kryteria operacyjne dla self-modelu (anty-„implicit model”)
 
-### 4.1 Kryterium operacyjne „kontrfaktycznego self-modelu”
-Żeby `M` nie było etykietą („implicit model”), wymagane jest spełnienie co najmniej jednego z:
+### 4.1 Minimalny wymóg dowodowy dla `M`
+Żeby `M` nie było etykietą, wymagane jest:
 
-- **C1 (przewaga kontrfaktyczna):** system systematycznie wybiera zmiany `F/𝓕`, które dają lepszy wynik niż baseline bez-modelowy (random/local), na zadaniach wymagających zmian reguł, a nie tylko tuningu.
-- **C2 (wrażliwość na zmianę reguł):** `M(F') ≠ M(F)` dla co najmniej jednej kontrfaktycznej modyfikacji, a różnica wpływa na wybór działania (nie jest „opisowa po fakcie”).
-- **C3 (ablacja):** wyłączenie `M` degraduje zdolność do sensownej meta-zmiany reguł, przy zachowaniu reszty systemu.
+- **C1 (przewaga nad baseline):** system wykazuje stabilną przewagę nad baseline bez-modelowym na zadaniach wymagających zmian `𝓕`,
+**ORAZ**
+- **C3 (ablacja):** wyłączenie/istotne osłabienie komponentu pełniącego funkcję `M` pogarsza zdolność do sensownej meta-zmiany `𝓕`.
 
-Jeśli nie da się wykazać C1/C2/C3, to `M` traktujemy jako niedookreślone i KGR nie jest zaliczone.
+C2 jest pomocnicze, nie wystarczające:
+- **C2 (wrażliwość kontrfaktyczna):** `M(𝓕') ≠ M(𝓕)` dla co najmniej jednej kontrfaktycznej modyfikacji, a różnica wpływa na wybór w `G`.
 
-### 4.2 Kryterium operacyjne „zmiany przestrzeni reguł”
-Żeby odciąć tuning:
-
-- **Tuning parametryczny (NIE KGR):** zmienia się `θ`, ale `𝓕` jest stałe (np. gradient descent na stałej architekturze, standardowy trening modelu).
-- **Meta-zmiana reguł (KGR-kandydat):** zmienia się `F` lub `𝓕` (architektura, operator, ograniczenia, generator reguł), a zmiana jest inicjowana przez wnioskowanie na `M`.
-
-**Test negatywny (obowiązkowy przykład):**
-- Standardowy **gradient descent** na stałej architekturze (parametry `θ` się zmieniają, `𝓕` stałe) → **nie przechodzi** warunku 2.
-
-### 4.3 Walidacja zwrotna ≠ zwykłe sprzężenie zwrotne
-Walidacja w KGR to nie „jakikolwiek feedback”. To:
-- system dokonuje przewidywania kontrfaktycznego `M(F')`,
-- wdraża `F'`,
-- mierzy rozjazd przewidywanie↔rzeczywistość,
-- aktualizuje `M` i/lub kryteria `G`.
-
-**Test negatywny:**
-- system zmienia reguły, ale nie weryfikuje przewidywań `M` i nie aktualizuje `M/G` → **nie KGR**.
+**Zasada:**  
+C2 może wzmacniać interpretację, ale bez C1+C3 nie uznajemy `M` za udowodnione operacyjnie.
 
 ---
 
-## 5) Operacjonalizacja „progu” (order parameter) – trzy kandydaty
+## 5) Kryteria operacyjne „zmiany 𝓕” i walidacji
 
-### 5.1 Φ: udział pętli meta-kauzalnej w regulacji (strukturalny)
-Intuicja: „ile adaptacji płynie przez `F→M→G→F`”.
+### 5.1 „Zmiana 𝓕” – test negatywny wymagany
+- **Standardowy gradient descent na stałej architekturze**: zmienia `θ`, nie `𝓕` → **nie KGR**.
 
-Definicja robocza:
-`Φ = I(F→M→G→F) / I(całkowity wpływ regulacyjny)`
+### 5.2 Walidacja `U` ≠ zwykły feedback
+Walidacja w KGR to:
+- predykcja kontrfaktyczna `M(𝓕')`,
+- wdrożenie `𝓕'`,
+- pomiar rozjazdu przewidywanie↔rzeczywistość,
+- aktualizacja `M` i/lub kryteriów `G`.
 
-gdzie `I(·)` to miara wpływu/istotności kanału (np. ablacjami, analizą przyczynową, spadkiem metryki celu po wyłączeniu ścieżki).
-
-**Kryterium progu (praktyczne):**
-- KGR-kandydat, gdy `Φ` przekracza ustalony próg i utrzymuje się w czasie (nie jednorazowy epizod).
-
-### 5.2 Ψ: przewaga kontrfaktycznego modelu nad baseline (funkcjonalny)
-Intuicja: self-model musi dawać przewagę nad heurystykami bez-modelowymi.
-
-Definicja:
-`Ψ = ΔJ_z_modelem − ΔJ_baseline`
-
-**Kryterium progu:**
-- KGR-kandydat, gdy `Ψ > 0` stabilnie, a przewaga rośnie na zadaniach wymagających zmian klasy reguł.
-
-### 5.3 Ω: intensywność przełączeń klas reguł (dyskretność)
-Intuicja: KGR powinno korelować z nieciągłym skokiem „mocy reorganizacji”.
-
-Definicja:
-`Ω = f(częstość przejść 𝓕_i↔𝓕_j, skala zmiany, poprawa J)`
-
-**Kryterium progu:**
-- KGR-kandydat, gdy pojawia się nieciągłość (skok) w `Ω` powiązana z trwałą poprawą `J` i stabilnością.
+**Test negatywny:** zmiana `𝓕` bez walidacji predykcji i bez aktualizacji `M/G` → **nie KGR**.
 
 ---
 
-## 6) Reguła decyzji: kiedy mówimy „KGR zaszło”
-System uznajemy za **KGR**, jeśli:
-- spełnia definicję **B-min** (sekcja 3),
-- spełnia co najmniej jedno z kryteriów C1/C2/C3 (sekcja 4.1),
-- oraz zachodzi co najmniej jedno z:
-  - `Φ` przekracza próg strukturalny,
-  - `Ψ` stabilnie dodatnie vs baseline,
-  - `Ω` wykazuje nieciągłość skorelowaną z poprawą `J`.
+## 6) Operacjonalizacja „progu” (stabilność) – bez arbitralności
 
-Preferencja: `Φ` jako najbardziej definicyjne; `Ψ` i `Ω` jako testy wzmacniające.
+### 6.1 Kryterium stabilności (domyślne)
+Warunki 1–3 uznajemy za stabilnie spełnione, jeśli wystąpią:
+- co najmniej **N = 3** pełne cykle `zmiana 𝓕 → walidacja predykcji → aktualizacja M/G`,
+**i**
+- po każdym cyklu nie obserwujemy degradacji metryki celu `J` poniżej baseline przez więcej niż 1 cykl (brak „jednorazowego fajerwerku”).
+
+**Uwaga:** N=3 to domyślne minimum operacyjne (nie teoria fizyczna).  
+Jeśli domena ma lepsze kryterium stabilności (okno czasowe, konwergencja, test generalizacji) — zastępujemy N=3 kryterium domenowym i zapisujemy to w protokole testu.
+
+### 6.2 Order parameters (opcjonalnie)
+- **Φ**: udział pętli `F→M→G→F` w regulacji (estymowany ablacjami / wpływem na `J`, nie liczbą wywołań).
+- **Ψ**: przewaga nad baseline (wymaga sensownie zdefiniowanego baseline’u).
+- **Ω**: miara dwuskładnikowa: (a) zdarzenia przełączeń `𝓕`, (b) ich wpływ na `J` — nie łączymy tego w jeden nieczytelny skalar bez opisu.
 
 ---
 
 ## 7) Bateria testów destrukcyjnych (anty-rebranding)
 
-### N1: cybernetyka II rzędu bez zmiany klasy reguł
-**Konstrukcja:** self-reference/obserwacja własnych operacji bez zdolności zmiany `𝓕` (tylko stan i parametry).  
-**Wynik:** **nie** jest KGR.
+### N1: self-reference/cybII bez zmiany 𝓕
+Self-reference bez zdolności zmiany `𝓕` → **nie KGR**.
 
-### N2: tuning bez kontrfaktycznego self-modelu
-**Konstrukcja:** optymalizacja parametrów/hiperparametrów bez kontrfaktycznej oceny skutków zmian reguł (search/tuning).  
-**Wynik:** **nie** jest KGR.
+### N2: tuning/search bez kontrfaktycznego `M` (trial-and-error)
+Zmiany reguł „na próbę” bez predykcji przed wdrożeniem → **nie KGR**.
 
-### N3: zmiana reguł bez walidacji predykcji
-**Konstrukcja:** system zmienia `F/𝓕`, ale nie weryfikuje predykcji `M` i nie aktualizuje `M/G`.  
-**Wynik:** **nie** jest KGR.
+### N3: zmiana 𝓕 bez walidacji predykcji
+Zmiana `𝓕` bez walidacji predykcji i bez aktualizacji `M/G` → **nie KGR**.
+
+### N4: „lookup-table kontrfaktyczność” (brak generalizacji)
+System ma tablicę przypadków i „udaje” predykcję zmian, ale nie aktualizuje `M/G` poza predefiniowanymi sytuacjami → **nie KGR**.
 
 ### P: zwycięstwo kontrfaktyczności
-**Konstrukcja:** KGR-kandydat vs baseline bez `M` na zadaniach wymagających zmian klasy reguł.  
-**Wynik:** `Ψ>0` i/lub wysokie `Φ`, stabilna poprawa `J`.
+KGR-kandydat bije baseline bez `M` na zadaniach wymagających zmian `𝓕`, z utrzymaniem stabilności wg sekcji 6.
 
 ---
 
-## 8) Przypadki graniczne (żeby nie udawać, że jest prosto)
-To nie są definicje, tylko rozstrzygnięcia robocze wg kryteriów powyżej:
-
-- **Standardowy trening modelu ML (gradient descent, stała architektura):** zazwyczaj **nie KGR** (tuning `θ`, brak zmiany `𝓕`).
-- **AutoML / NAS / systemy modyfikujące architekturę na podstawie modelu skutków:** potencjalnie **KGR-kandydaci**, jeśli spełniają 4.1 i walidację 4.3.
-- **Ewolucja biologiczna jako proces (bez wewnętrznego modelu kontrfaktycznego systemu jako całości):** zazwyczaj **nie KGR** (brak `M` w sensie operacyjnym).
-- **Organizacje społeczne:** przypadek wysokiego ryzyka błędu nośnika (czy „system” ma `M`, czy mają go jednostki). Wymaga ostrożnej operacjonalizacji `M/G/U`.
+## 8) Przypadki graniczne (rozstrzygnięcia robocze)
+- **Model-based RL**: przechodzi część warunków (model + walidacja), ale **nie jest KGR**, jeśli nie wykazuje zmiany `𝓕` (a jedynie aktualizację polityki/parametrów w stałej klasie).
+- **AutoML/NAS**: może być KGR-kandydatem, jeśli ma kontrfaktyczny `M` + meta-kontrolę zmieniającą `𝓕` + walidację predykcji + stabilność.
+- **Ewolucja biologiczna jako proces selekcji**: zazwyczaj **nie KGR** (brak `M` w sensie predykcji przed wdrożeniem; dominują mechanizmy trial-and-error).
+- **JIT/kompilatory adaptacyjne**: traktować jako test graniczny; jeśli przechodzą, to znaczy, że definicja obejmuje „inżynierską meta-adaptację” — decyzja, czy to akceptujemy, jest polityką projektu (kanon).
 
 ---
 
 ## Implikacje / ryzyka (B)
 Implikacje:
-- KGR = dominująca pętla meta-kauzalna + kontrfaktyczność + zmiana przestrzeni reguł + walidacja predykcji.
-- „Krytyczność” ma sens tylko jako wskaźniki `Φ/Ψ/Ω` + testy N1/N2/N3/P.
+- `𝓕` jest teraz obiektem operacyjnym (rodzina struktur reguł), więc „nóż” G staje się rozstrzygalny.
+- `M` ma twardy wymóg dowodowy (C1+C3), co tnie „implicit model” i redukuje fałszywe pozytywy.
 
-Ryzyka:
-- `Φ` wymaga sensownej miary wpływu; bez tego grozi arbitralność.
-- `Ψ` zależy od doboru baseline; zły baseline daje fałszywe KGR.
-- `Ω` może mylić „częste zmiany” z „sensowną reorganizacją”.
-- Sekcja 8 (przypadki graniczne) musi być utrzymywana zgodnie ze zmianami definicji, inaczej stanie się folklorem.
+Ryzyko:
+- C1+C3 podnosi próg dowodowy (mniej rzeczy przejdzie jako KGR, ale to jest cel).
+- W black-box systemach ablacja może być trudna — wtedy trzeba zdefiniować substytut eksperymentalny i opisać go w protokole.
