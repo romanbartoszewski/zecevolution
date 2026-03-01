@@ -201,6 +201,12 @@ d3.json("data.json")
 
     overlay.on("click", () => overlay.classed("hidden", true));
     overlayContent.on("click", (e) => e.stopPropagation());
+        // UX: Esc zamyka overlay
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.classed("hidden")) {
+        overlay.classed("hidden", true);
+      }
+    });
 
     simulation.on("tick", () => {
       link
