@@ -2,22 +2,31 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <title>Zecevolucja – Dynamiczna Ontologia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zecevolucja - Dynamiczna Ontologia</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
 
 <div id="container">
   <div id="graph"></div>
+
   <div id="panel">
     <h2 id="node-title">Wybierz węzeł</h2>
     <p id="node-description">Kliknij element grafu, aby zobaczyć opis.</p>
+
+    <!-- P0: jawny status ładowania/błędu danych (graph.js w kolejnym commicie będzie tym sterował) -->
+    <div id="status" role="status" aria-live="polite" style="margin-top:12px;">
+      <div id="status-loading">Ładowanie danych…</div>
+      <div id="status-error" style="display:none;">
+        Błąd ładowania danych. Sprawdź <code>docs/data.json</code> oraz konsolę przeglądarki.
+      </div>
+    </div>
+
     <a id="node-link" href="#" target="_blank"></a>
   </div>
 </div>
 
-<script src="graph.js"></script>
 <div id="overlay" class="hidden">
   <div id="overlay-content">
     <h2 id="overlay-title"></h2>
@@ -25,6 +34,9 @@
     <a id="overlay-link" href="#" target="_blank"></a>
   </div>
 </div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="graph.js"></script>
 
 </body>
 </html>
