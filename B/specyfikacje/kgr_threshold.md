@@ -1,4 +1,4 @@
-# KGR – próg meta-reorganizacji (specyfikacja operacyjna v0.4)
+# KGR – Krytyczna Gęstość Refleksyjna - próg meta-reorganizacji (specyfikacja operacyjna v0.4)
 
 ## 0) Status dokumentu
 Warstwa: **B (operacyjna)**  
