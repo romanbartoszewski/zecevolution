@@ -25,7 +25,7 @@ Ten dokument definiuje reguły operacyjne projektu: jak redukujemy koncepcje do 
 ## 2) Minimalny standard dla treści B
 Każdy dokument B powinien zawierać (jeśli dotyczy):
 - definicje pojęć (operacyjnie),
-- warunki konieczne i wystarczające (o ile da się),
+- warunki konieczne i (jeśli możliwe) wystarczające,
 - testy negatywne (co ma NIE przechodzić),
 - (opcjonalnie) metryki / wskaźniki / protokół testu.
 
@@ -41,15 +41,39 @@ Jeśli nie da się dodać noża lub testu → materiał pozostaje C (narracja), 
 
 ---
 
-## 4) KGR – obowiązująca specyfikacja
-W projekcie termin **KGR** wolno używać normatywnie tylko zgodnie z:
-- `B/specyfikacje/kgr_threshold.md`
+## 4) KGR – mini-spec (inline) + testy negatywne
+Użycie terminu **KGR** w projekcie jest normatywne tylko wtedy, gdy spełnione są łącznie warunki:
 
-Minimalnie KGR wymaga:
-- kontrfaktycznego self-modelu,
-- meta-kontroli zmieniającej przestrzeń reguł (nie tylko tuning),
-- walidacji zwrotnej,
-- oraz przejścia progu (operacjonalizowanego wskaźnikami / testami).
+### 4.1 Kontrfaktyczny self-model (M) — definicja minimalna
+System posiada wewnętrzną reprezentację `M` własnej architektury/reguł taką, że:
+- potrafi ocenić skutki co najmniej jednej kontrfaktycznej zmiany `F→F'` lub `𝓕→𝓕'` **przed** wdrożeniem zmiany,
+- a przewidywania `M(F')` są używane do wyboru/odrzucenia zmian (nie są opisem “po fakcie”).
+
+Kryterium operacyjne (minimalne): model daje przewagę nad baseline bez-modelowym na zadaniach wymagających zmian reguł/klasy reguł.
+
+### 4.2 Meta-kontrola przestrzeni reguł (G) — „nóż” odróżniający
+System potrafi modyfikować **przestrzeń reguł** (`F` lub klasę `𝓕`), a nie tylko parametry `θ` w obrębie stałej `𝓕`.
+
+- tuning: `θ` zmienia się, `𝓕` stałe → **nie wystarcza**
+- KGR: `𝓕` lub generator reguł się zmienia → **wymagane**
+
+### 4.3 Walidacja zwrotna (U) — definicja minimalna
+Po wdrożeniu zmiany reguł system porównuje skutki z przewidywaniami `M` i:
+- aktualizuje `M` i/lub kryteria wyboru w `G` (zamknięta pętla uczenia na błędzie).
+
+To nie jest “dowolne sprzężenie zwrotne”, tylko walidacja **predykcji kontrfaktycznych** po zmianie reguł.
+
+### 4.4 Próg (stabilność spełnienia)
+Warunki 4.1–4.3 muszą zachodzić **stabilnie** (nie jednorazowo):
+- przez `N ≥ 3` cykle *modyfikacja reguł → walidacja → aktualizacja modelu*  
+  lub przez minimalny czas `T` odpowiadający co najmniej 3 takim cyklom w danym systemie.
+
+### Testy negatywne (obowiązkowe w ocenie KGR)
+- **N1 (cybII bez zmiany klasy reguł):** self-reference bez zdolności zmiany `𝓕` → **nie KGR**.
+- **N2 (tuning bez kontrfaktyczności):** optymalizacja parametrów/hiperparametrów bez kontrfaktycznego `M` → **nie KGR**.
+- **N3 (zmiana reguł bez walidacji):** system zmienia reguły, ale nie weryfikuje predykcji `M` i nie aktualizuje `M/G` → **nie KGR**.
+
+Pełna specyfikacja i metryki progu: `B/specyfikacje/kgr_threshold.md`.
 
 ---
 
@@ -62,14 +86,14 @@ Zasada: do kanonu trafiają tylko elementy, które przeszły przez B (redukcja +
 ---
 
 ## Implikacje systemowe:
-- Wymusza redukcję pojęć do rdzenia i zabezpiecza przed „teorią z gumy”.
-- Utrzymuje stałą jakość definicji przy pracy z modelami zewnętrznymi (Claude/Grok).
+- `zasady.md` przestaje być szkieletem: zawiera minimalną definicję i testy negatywne KGR inline.
+- Linki do specyfikacji przestają zastępować definicje; pełnią rolę rozwinięcia.
 
 ## Ryzyko:
-- Może spowolnić iterację: więcej materiału zostanie w C zanim przejdzie do B.
-- Jeśli testy negatywne będą pomijane „bo szkoda czasu”, B zamieni się w narrację.
+- Inline mini-spec może się rozjechać z `kgr_threshold.md` (ryzyko duplikacji). Trzeba utrzymywać spójność wersji.
+- Warunek `N ≥ 3` to arbitralne minimum: może wymagać korekty w zależności od domeny.
 
 ## Czy naruszono poziomy C/B/A:
 - **C:** nie.
-- **B:** tak (ustanowiono rygor operacyjny).
-- **A:** nie (A pozostaje zablokowane jako argument).
+- **B:** tak (uszczelniono definicję i testy).
+- **A:** nie.
