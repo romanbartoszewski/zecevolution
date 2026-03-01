@@ -99,9 +99,14 @@ d3.json("data.json")
           .on("end", dragended)
       );
 
-    // Labels
+       // Labels (P1: wydajność — auto-hide dla dużych grafów)
+    const LABELS_AUTOHIDE_THRESHOLD = 150;
+    let labelsVisible = (data.nodes || []).length <= LABELS_AUTOHIDE_THRESHOLD;
+
     const label = container
       .append("g")
+      .attr("data-layer", "labels")
+      .style("display", labelsVisible ? "block" : "none")
       .selectAll("text")
       .data(data.nodes)
       .enter()
@@ -111,6 +116,16 @@ d3.json("data.json")
       .attr("font-size", 14)
       .attr("text-anchor", "middle");
 
+    // Toggle etykiet: klawisz "L"
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "l" || e.key === "L") {
+        labelsVisible = !labelsVisible;
+        container
+          .select('g[data-layer="labels"]')
+          .style("display", labelsVisible ? "block" : "none");
+      }
+    });
+
     // --- P1: FILTRY W PANELU (#filters), bez fixed div na body ---
     const types = [...new Set((data.nodes || []).map((n) => n.type).filter(Boolean))];
 
@@ -119,7 +134,9 @@ d3.json("data.json")
 
     function applyFilters() {
       node.style("display", (d) => (filterState[d.type] === false ? "none" : "block"));
-      label.style("display", (d) => (filterState[d.type] === false ? "none" : "block"));
+           label.style("display", (d) =>
+        labelsVisible && filterState[d.type] !== false ? "block" : "none"
+      );
 
       // Krawędzie: pokazuj tylko jeśli oba końce są widoczne (czytelniejsze i logiczniejsze)
       link.style("display", (l) => {
