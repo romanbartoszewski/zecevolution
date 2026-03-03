@@ -1,526 +1,639 @@
-// P0/P1: stabilne wymiary (kontener #graph), loading/error UX, filtry w panelu (#filters)
+// ================================================================
+//  graph.js — Zecevolucja v2
+//  CRUD: add/edit/delete nodes & links, localStorage persistence,
+//  export data.json, KGR mode, filters, zoom/fit/reset
+// ================================================================
 
-const graphEl = document.getElementById("graph");
+// ─── Config ────────────────────────────────────────────────────
+const STORAGE_KEY = "zecevolution_v1";
 
-// Status UI (index.html)
-const statusLoadingEl = document.getElementById("status-loading");
-const statusErrorEl = document.getElementById("status-error");
+const COLOR = {
+  proces:     "#00e5b0",
+  stan:       "#66ffaa",
+  zagrożenie: "#ff3d5a",
+  meta:       "#ff9d2e",
+  B:          "#4d9fff",
+  C:          "#c084fc",
+};
 
-// Panel filtrów (index.html)
-const filtersEl = document.getElementById("filters");
+// ─── DOM helpers ───────────────────────────────────────────────
+const $  = (id) => document.getElementById(id);
+const graphEl = $("graph");
 
-function setStatus({ loading, error }) {
-  if (statusLoadingEl) statusLoadingEl.style.display = loading ? "block" : "none";
-  if (statusErrorEl) statusErrorEl.style.display = error ? "block" : "none";
+// ─── Size ──────────────────────────────────────────────────────
+let W, H;
+function refreshSize() {
+  const r = graphEl.getBoundingClientRect();
+  W = Math.max(320, r.width  || window.innerWidth);
+  H = Math.max(240, r.height || window.innerHeight);
 }
+refreshSize();
 
-function getGraphSize() {
-  const rect = graphEl ? graphEl.getBoundingClientRect() : null;
-  const w = rect && rect.width ? rect.width : window.innerWidth;
-  const h = rect && rect.height ? rect.height : window.innerHeight;
-  return { width: Math.max(320, Math.floor(w)), height: Math.max(240, Math.floor(h)) };
-}
+// ─── SVG ───────────────────────────────────────────────────────
+const svg = d3.select("#graph").append("svg").attr("width", W).attr("height", H);
+const gMain = svg.append("g");          // transform target
+let   tx  = d3.zoomIdentity;
 
-function clearElement(el) {
-  if (!el) return;
-  while (el.firstChild) el.removeChild(el.firstChild);
-}
-
-let { width, height } = getGraphSize();
-
-const svg = d3
-  .select("#graph")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
-
-const container = svg.append("g");
-
-let currentTransform = d3.zoomIdentity;
-
-function applyTransform(pulseScale = 1) {
-  // Skalowanie "wokół środka ekranu", żeby puls nie powodował dryfu
-  const cx = width / 2;
-  const cy = height / 2;
-
-  const p = pulseScale;
-  const x = cx - (cx - currentTransform.x) * p;
-  const y = cy - (cy - currentTransform.y) * p;
-  const k = currentTransform.k * p;
-
-  container.attr("transform", `translate(${x},${y}) scale(${k})`);
-}
-
-const zoom = d3.zoom().on("zoom", (event) => {
-  currentTransform = event.transform;
-  applyTransform(1);
+const zoom = d3.zoom().on("zoom", (e) => {
+  tx = e.transform;
+  gMain.attr("transform", tx);
 });
 svg.call(zoom);
 
-// --- P1: Tryb KGR (UI-only): puls, drżenie relacji, animowany gradient energii ---
+// Pulse helper (KGR mode)
+function applyTx(pScale = 1) {
+  const cx = W / 2, cy = H / 2;
+  const k  = tx.k * pScale;
+  const x  = cx - (cx - tx.x) * pScale;
+  const y  = cy - (cy - tx.y) * pScale;
+  gMain.attr("transform", `translate(${x},${y}) scale(${k})`);
+}
+
+// ─── SVG Defs ──────────────────────────────────────────────────
 const defs = svg.append("defs");
 
-// Glow dla relacji
-defs
-  .append("filter")
-  .attr("id", "kgrGlow")
-  .attr("x", "-50%")
-  .attr("y", "-50%")
-  .attr("width", "200%")
-  .attr("height", "200%")
+defs.append("filter").attr("id", "glow")
+  .attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%")
   .call((f) => {
-    f.append("feGaussianBlur")
-      .attr("in", "SourceGraphic")
-      .attr("stdDeviation", 2.2)
-      .attr("result", "blur");
+    f.append("feGaussianBlur").attr("in", "SourceGraphic").attr("stdDeviation", 2.5).attr("result", "b");
     f.append("feMerge").call((m) => {
-      m.append("feMergeNode").attr("in", "blur");
+      m.append("feMergeNode").attr("in", "b");
       m.append("feMergeNode").attr("in", "SourceGraphic");
     });
   });
 
-// Gradient energii (animowany przez gradientTransform)
-const energyGradient = defs
-  .append("linearGradient")
-  .attr("id", "kgrEnergy")
+const energyGrad = defs.append("linearGradient").attr("id", "kgrEnergy")
   .attr("gradientUnits", "userSpaceOnUse")
-  .attr("x1", 0)
-  .attr("y1", 0)
-  .attr("x2", 220)
-  .attr("y2", 0);
+  .attr("x1", 0).attr("y1", 0).attr("x2", 220).attr("y2", 0);
+energyGrad.append("stop").attr("offset",   "0%").attr("stop-color", "#ffaa00").attr("stop-opacity", .95);
+energyGrad.append("stop").attr("offset",  "50%").attr("stop-color", "#00ffff").attr("stop-opacity", .95);
+energyGrad.append("stop").attr("offset", "100%").attr("stop-color", "#ffaa00").attr("stop-opacity", .95);
 
-energyGradient.append("stop").attr("offset", "0%").attr("stop-color", "#ffaa00").attr("stop-opacity", 0.95);
-energyGradient.append("stop").attr("offset", "50%").attr("stop-color", "#00ffff").attr("stop-opacity", 0.95);
-energyGradient.append("stop").attr("offset", "100%").attr("stop-color", "#ffaa00").attr("stop-opacity", 0.95);
+// ─── State ─────────────────────────────────────────────────────
+let graphData     = { nodes: [], links: [] };
+let sim           = null;
+let linkSel, nodeSel, labelSel;
 
-let kgrMode = false;
-let kgrTimer = null;
+let labelsOn      = true;
+let selectedNode  = null;
+let filterState   = {};
+let kgrMode       = false;
+let kgrTimer      = null;
+let linkingMode   = false;
+let linkSrc       = null;
+let formMode      = null; // "add" | "edit"
 
-function startKgrMode({ simulation, nodeSel, linkSel }) {
-  if (kgrMode) return;
-  kgrMode = true;
+// ─── Persistence ───────────────────────────────────────────────
+function cleanData(d) {
+  return {
+    nodes: d.nodes.map((n) => {
+      const o = { id: n.id, type: n.type };
+      if (n.description) o.description = n.description;
+      if (n.url)         o.url         = n.url;
+      return o;
+    }),
+    links: d.links.map((l) => ({
+      source: typeof l.source === "object" ? l.source.id : l.source,
+      target: typeof l.target === "object" ? l.target.id : l.target,
+    })),
+  };
+}
 
-  // "więcej energii"
-  simulation.alphaTarget(0.6).restart();
+function saveToStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanData(graphData))); }
+  catch (e) { console.warn("Storage write failed:", e); }
+}
 
-  // podkreśl KGR
-  nodeSel
-    .transition()
-    .duration(250)
-    .attr("r", (n) => (n.id === "KGR" ? 28 : 18));
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
 
-  // relacje: glow + gradient
-  linkSel
-    .attr("filter", "url(#kgrGlow)")
-    .attr("stroke", "url(#kgrEnergy)");
+// ─── Toast ─────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, warn = false) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.className   = warn ? "toast-warn show" : "show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (el.className = warn ? "toast-warn" : ""), 2600);
+}
 
-  const t0 = performance.now();
+// ─── Status ────────────────────────────────────────────────────
+function setStatus({ loading, error }) {
+  const lEl = $("status-loading"), eEl = $("status-error");
+  if (lEl) lEl.style.display = loading ? "" : "none";
+  if (eEl) eEl.style.display = error   ? "" : "none";
+}
 
-  kgrTimer = d3.timer(() => {
-    const t = (performance.now() - t0) / 1000;
+// ─── Simulation ────────────────────────────────────────────────
+function buildSim() {
+  if (sim) sim.stop();
+  sim = d3.forceSimulation(graphData.nodes)
+    .force("link",    d3.forceLink(graphData.links).id((d) => d.id).distance(115))
+    .force("charge",  d3.forceManyBody().strength(-300))
+    .force("center",  d3.forceCenter(W / 2, H / 2))
+    .force("collide", d3.forceCollide(32));
+}
 
-    // globalne pulsowanie: delikatne (fazowe)
-    const pulse = 1 + Math.sin(t * 2.6) * 0.012;
-    applyTransform(pulse);
+// ─── D3 general-update render ──────────────────────────────────
+function renderGraph() {
+  // Links
+  gMain.selectAll("g.g-links").remove();
+  const gLinks = gMain.append("g").attr("class", "g-links");
+  linkSel = gLinks.selectAll("line")
+    .data(graphData.links)
+    .join("line")
+    .attr("stroke", "#1e2a38")
+    .attr("stroke-width", 1.8)
+    .attr("stroke-opacity", 0.9);
 
-    // "drżenie relacji": modulacja grubości i opacity + przesuw gradientu
-    const wobble = 1 + Math.sin(t * 11.0) * 0.18;
+  // Nodes
+  gMain.selectAll("g.g-nodes").remove();
+  const gNodes = gMain.append("g").attr("class", "g-nodes");
+  nodeSel = gNodes.selectAll("circle")
+    .data(graphData.nodes, (d) => d.id)
+    .join("circle")
+    .attr("r", 18)
+    .attr("fill", "#0c1118")
+    .attr("stroke", (d) => COLOR[d.type] || "#4a5568")
+    .attr("stroke-width", 2)
+    .style("cursor", "pointer")
+    .call(
+      d3.drag()
+        .on("start", (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on("drag",  (e, d) => { d.fx = e.x;   d.fy = e.y; })
+        .on("end",   (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    )
+    .on("click", onNodeClick);
+
+  // Labels
+  gMain.selectAll("g.g-labels").remove();
+  const gLabels = gMain.append("g").attr("class", "g-labels").style("display", labelsOn ? "" : "none");
+  labelSel = gLabels.selectAll("text")
+    .data(graphData.nodes, (d) => d.id)
+    .join("text")
+    .text((d) => d.id)
+    .attr("fill", "#567080")
+    .attr("font-size", 11)
+    .attr("font-family", "'JetBrains Mono', monospace")
+    .attr("text-anchor", "middle")
+    .style("pointer-events", "none");
+
+  // Update sim
+  sim.nodes(graphData.nodes);
+  sim.force("link").links(graphData.links);
+  sim.alpha(0.4).restart();
+
+  sim.on("tick", () => {
     linkSel
-      .attr("stroke-width", 1.35 * wobble)
-      .attr("stroke-opacity", 0.55 + 0.25 * Math.sin(t * 6.0));
+      .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
+      .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+    nodeSel.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+    labelSel.attr("x", (d) => d.x).attr("y", (d) => d.y - 27);
+  });
 
-    const offset = (t * 90) % 220;
-    energyGradient.attr("gradientTransform", `translate(${offset},0)`);
+  applyFilters();
+  renderFilters();
+}
+
+// ─── Filters ───────────────────────────────────────────────────
+function renderFilters() {
+  const el = $("filters");
+  if (!el) return;
+  el.innerHTML = "";
+
+  const types = [...new Set(graphData.nodes.map((n) => n.type).filter(Boolean))];
+
+  types.forEach((type) => {
+    if (!(type in filterState)) filterState[type] = true;
+
+    const color  = COLOR[type] || "#ccc";
+    const row    = document.createElement("label");
+    row.className = "filter-row";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = filterState[type]; cb.className = "filter-checkbox";
+
+    const dot = document.createElement("span");
+    dot.className = "filter-dot";
+    dot.style.borderColor = color;
+    dot.style.background  = filterState[type] ? color + "22" : "transparent";
+
+    const txt = document.createElement("span");
+    txt.className   = "filter-text";
+    txt.textContent = type;
+
+    cb.addEventListener("change", () => {
+      filterState[type]     = cb.checked;
+      dot.style.background  = cb.checked ? color + "22" : "transparent";
+      applyFilters();
+    });
+
+    row.append(cb, dot, txt);
+    el.appendChild(row);
   });
 }
 
-function stopKgrMode({ simulation, nodeSel, linkSel }) {
-  if (!kgrMode) return;
-  kgrMode = false;
+function applyFilters() {
+  if (!nodeSel || !linkSel || !labelSel) return;
+  nodeSel.style("display",  (d) => filterState[d.type] === false ? "none" : "");
+  labelSel.style("display", (d) => labelsOn && filterState[d.type] !== false ? "" : "none");
+  linkSel.style("display",  (l) => {
+    const s = l.source && l.source.type;
+    const t = l.target && l.target.type;
+    return filterState[s] === false || filterState[t] === false ? "none" : "";
+  });
+}
 
-  simulation.alphaTarget(0);
+// ─── Panel: state machine ───────────────────────────────────────
 
-  // wyłącz timer
-  if (kgrTimer) {
-    kgrTimer.stop();
-    kgrTimer = null;
+function panelDefault() {
+  formMode = null;
+  $("view-main").style.display = "";
+  $("view-form").style.display = "none";
+  $("node-title").textContent  = "zecevolucja";
+  $("node-title").className    = "";
+  $("node-type-badge").textContent = "";
+  $("node-description").textContent = "Kliknij węzeł grafu, aby zobaczyć opis.";
+  $("node-description").className   = "desc-placeholder";
+  const lk = $("node-link"); if (lk) { lk.textContent = ""; lk.href = "#"; }
+  $("node-actions").style.display = "none";
+}
+
+function panelDetail(d) {
+  formMode = null;
+  $("view-main").style.display = "";
+  $("view-form").style.display = "none";
+
+  const color = COLOR[d.type] || "#6a7a8a";
+  $("node-title").textContent = d.id;
+  $("node-title").className   = "node-active";
+
+  const badge = $("node-type-badge");
+  badge.textContent    = d.type || "";
+  badge.style.color       = color;
+  badge.style.borderColor = color;
+
+  const desc = $("node-description");
+  desc.textContent = d.description || "(brak opisu)";
+  desc.className   = "";
+
+  const lk = $("node-link");
+  if (lk) {
+    const href = d.url || "";
+    if (href) { lk.textContent = "↗ Otwórz link"; lk.href = href; }
+    else       { lk.textContent = ""; lk.href = "#"; }
+  }
+  $("node-actions").style.display = "";
+}
+
+function panelForm(mode, nodeData = null) {
+  formMode = mode;
+  $("view-main").style.display = "none";
+  $("view-form").style.display = "";
+
+  $("form-mode-title").textContent = mode === "edit" ? `Edytuj: ${nodeData?.id || ""}` : "Nowy węzeł";
+  $("form-id").value    = nodeData?.id          || "";
+  $("form-id").disabled = mode === "edit";       // ID immutable (breaks links)
+  $("form-type").value  = nodeData?.type         || "proces";
+  $("form-desc").value  = nodeData?.description  || "";
+  $("form-url").value   = nodeData?.url          || "";
+
+  setTimeout(() => $("form-id").focus(), 50);
+}
+
+function closeForm() {
+  formMode = null;
+  $("view-form").style.display = "none";
+  $("view-main").style.display = "";
+  selectedNode ? panelDetail(selectedNode) : panelDefault();
+}
+
+// ─── CRUD operations ───────────────────────────────────────────
+
+function submitForm() {
+  const id   = $("form-id").value.trim();
+  const type = $("form-type").value;
+  const desc = $("form-desc").value.trim();
+  const url  = $("form-url").value.trim();
+
+  if (!id) { $("form-id").focus(); showToast("ID jest wymagane", true); return; }
+
+  if (formMode === "add") {
+    if (graphData.nodes.find((n) => n.id === id)) {
+      showToast("Węzeł o tym ID już istnieje", true); return;
+    }
+    const newNode = { id, type };
+    if (desc) newNode.description = desc;
+    if (url)  newNode.url         = url;
+    graphData.nodes.push(newNode);
+    saveToStorage();
+    buildSim();
+    renderGraph();
+    selectedNode = graphData.nodes.find((n) => n.id === id);
+    if (nodeSel) nodeSel.classed("selected", (n) => n.id === id).attr("stroke-width", (n) => n.id === id ? 3 : 2);
+    panelDetail(selectedNode);
+    showToast(`Dodano: ${id}`);
+
+  } else if (formMode === "edit" && selectedNode) {
+    selectedNode.type        = type;
+    selectedNode.description = desc || undefined;
+    selectedNode.url         = url  || undefined;
+    saveToStorage();
+    if (nodeSel) nodeSel.attr("stroke", (d) => COLOR[d.type] || "#4a5568");
+    panelDetail(selectedNode);
+    showToast(`Zapisano: ${id}`);
+  }
+}
+
+function deleteSelectedNode() {
+  if (!selectedNode) return;
+  const id = selectedNode.id;
+
+  // Remove node
+  graphData.nodes = graphData.nodes.filter((n) => n.id !== id);
+
+  // Remove attached links (resolve id from D3 object ref)
+  graphData.links = graphData.links.filter((l) => {
+    const s = typeof l.source === "object" ? l.source.id : l.source;
+    const t = typeof l.target === "object" ? l.target.id : l.target;
+    return s !== id && t !== id;
+  });
+
+  selectedNode = null;
+  saveToStorage();
+  buildSim();
+  renderGraph();
+  panelDefault();
+  stopKgr();
+  showToast(`Usunięto: ${id}`);
+}
+
+// ─── Link (edge) mode ──────────────────────────────────────────
+function startLinkMode() {
+  linkingMode = true;
+  linkSrc     = null;
+  document.body.classList.add("linking");
+  $("link-banner").classList.add("active");
+  $("link-banner-text").textContent = "Kliknij węzeł źródłowy";
+
+  // deselect current
+  selectedNode = null;
+  if (nodeSel) { nodeSel.classed("selected", false); nodeSel.attr("stroke-width", 2); }
+  panelDefault();
+}
+
+function cancelLinkMode() {
+  linkingMode = false;
+  linkSrc     = null;
+  document.body.classList.remove("linking");
+  $("link-banner").classList.remove("active");
+  if (nodeSel) { nodeSel.classed("selected", false); nodeSel.attr("stroke-width", 2); }
+}
+
+// ─── Node click handler ────────────────────────────────────────
+function onNodeClick(event, d) {
+  event.stopPropagation();
+
+  if (linkingMode) {
+    if (!linkSrc) {
+      // First click = source
+      linkSrc = d;
+      nodeSel.classed("selected", (n) => n.id === d.id).attr("stroke-width", (n) => n.id === d.id ? 3 : 2);
+      $("link-banner-text").textContent = `${d.id} → kliknij węzeł docelowy`;
+    } else {
+      // Second click = target
+      if (linkSrc.id !== d.id) {
+        const s  = linkSrc.id;
+        const t  = d.id;
+        const dup = graphData.links.some((l) => {
+          const ls = typeof l.source === "object" ? l.source.id : l.source;
+          const lt = typeof l.target === "object" ? l.target.id : l.target;
+          return ls === s && lt === t;
+        });
+        if (!dup) {
+          graphData.links.push({ source: s, target: t });
+          saveToStorage();
+          buildSim();
+          renderGraph();
+          showToast(`Relacja: ${s} → ${t}`);
+        } else {
+          showToast("Relacja już istnieje", true);
+        }
+      }
+      cancelLinkMode();
+    }
+    return;
   }
 
-  // wróć do normalnego transformu (bez pulsu)
-  applyTransform(1);
+  // Normal select
+  selectedNode = d;
+  nodeSel.classed("selected", (n) => n.id === d.id).attr("stroke-width", (n) => n.id === d.id ? 3 : 2);
+  panelDetail(d);
 
-  // reset wyglądu
-  nodeSel.transition().duration(250).attr("r", 18);
-
-  linkSel
-    .attr("filter", null)
-    .attr("stroke", "#444")
-    .attr("stroke-width", 1.5)
-    .attr("stroke-opacity", 1);
-
-  energyGradient.attr("gradientTransform", "translate(0,0)");
+  if (d.id === "KGR") startKgr();
+  else stopKgr();
 }
 
-setStatus({ loading: true, error: false });
-
-d3.json("data.json")
-  .then((data) => {
-    setStatus({ loading: false, error: false });
-
-    const overlay = d3.select("#overlay");
-    const overlayContent = d3.select("#overlay-content");
-
-        // --- P1 UX: szczegóły węzła w prawym panelu (bez modala/overlay) ---
-    const panelTitleEl = document.getElementById("node-title");
-    const panelDescEl = document.getElementById("node-description");
-    const panelLinkEl = document.getElementById("node-link");
-    const viewControlsEl = document.getElementById("view-controls");
-    const filtersSectionEl = document.getElementById("filters");
-
-    const panelDefaults = {
-      title: panelTitleEl ? panelTitleEl.textContent : "",
-      desc: panelDescEl ? panelDescEl.textContent : "",
-      linkText: panelLinkEl ? panelLinkEl.textContent : "",
-      linkHref: panelLinkEl ? panelLinkEl.getAttribute("href") : "#",
-      linkDisplay: panelLinkEl ? panelLinkEl.style.display : "",
-    };
-
-    // Przycisk zamknięcia (tworzony dynamicznie, żeby nie ruszać index.html)
-    let panelCloseBtn = document.getElementById("panel-close-details");
-    if (!panelCloseBtn && panelTitleEl) {
-      panelCloseBtn = document.createElement("button");
-      panelCloseBtn.id = "panel-close-details";
-      panelCloseBtn.type = "button";
-      panelCloseBtn.textContent = "×";
-      panelCloseBtn.title = "Zamknij szczegóły";
-      panelCloseBtn.setAttribute("aria-label", "Zamknij szczegóły");
-
-      // wstaw przed tytułem
-      panelTitleEl.parentNode.insertBefore(panelCloseBtn, panelTitleEl);
-
-      // minimalny styl inline (tymczasowo). W kolejnym kroku przeniesiemy do style.css.
-      panelCloseBtn.style.cssText =
-        "float:right; margin:0 0 10px 10px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; " +
-        "border-radius:10px; width:34px; height:34px; font-size:22px; line-height:28px; cursor:pointer; display:none;";
-    }
-
-    function showPanelDetails(d) {
-      if (panelTitleEl) panelTitleEl.textContent = d.id || "—";
-      if (panelDescEl) panelDescEl.textContent = d.description || "—";
-
-      // Link (opcjonalny, tylko jeśli jest w danych)
-      const href = d.url || d.link || d.href;
-      if (panelLinkEl) {
-        if (href) {
-          panelLinkEl.textContent = "Otwórz link";
-          panelLinkEl.setAttribute("href", href);
-          panelLinkEl.style.display = "block";
-        } else {
-          panelLinkEl.textContent = "";
-          panelLinkEl.setAttribute("href", "#");
-          panelLinkEl.style.display = "none";
-        }
-      }
-
-      // ukryj sterowanie i filtry, pokaż X
-      if (viewControlsEl) viewControlsEl.style.display = "none";
-      if (filtersSectionEl) filtersSectionEl.style.display = "none";
-      if (panelCloseBtn) panelCloseBtn.style.display = "inline-flex";
-    }
-
-    function hidePanelDetails() {
-      if (panelTitleEl) panelTitleEl.textContent = panelDefaults.title;
-      if (panelDescEl) panelDescEl.textContent = panelDefaults.desc;
-
-      if (panelLinkEl) {
-        panelLinkEl.textContent = panelDefaults.linkText;
-        if (panelDefaults.linkHref) panelLinkEl.setAttribute("href", panelDefaults.linkHref);
-        panelLinkEl.style.display = panelDefaults.linkDisplay || "";
-      }
-
-      if (viewControlsEl) viewControlsEl.style.display = "";
-      if (filtersSectionEl) filtersSectionEl.style.display = "";
-      if (panelCloseBtn) panelCloseBtn.style.display = "none";
-    }
-
-    const colorMap = {
-      proces: "#00ffff",
-      stan: "#00ff88",
-      zagrożenie: "#ff5555",
-      meta: "#ffaa00",
-    };
-
-    // Force
-    const simulation = d3
-      .forceSimulation(data.nodes)
-      .force(
-        "link",
-        d3
-          .forceLink(data.links)
-          .id((d) => d.id)
-          .distance(150)
-      )
-      .force("charge", d3.forceManyBody().strength(-400))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
-    // Links
-    const link = container
-      .append("g")
-      .selectAll("line")
-      .data(data.links)
-      .enter()
-      .append("line")
-      .attr("stroke", "#444")
-      .attr("stroke-width", 1.5);
-
-    // Nodes
-    const node = container
-      .append("g")
-      .selectAll("circle")
-      .data(data.nodes)
-      .enter()
-      .append("circle")
-      .attr("r", 18)
-      .attr("fill", "#1e1e1e")
-      .attr("stroke", (d) => colorMap[d.type] || "#ccc")
-      .attr("stroke-width", 2)
-      .call(
-        d3
-          .drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended)
-      );
-
-       // Labels (P1: wydajność — auto-hide dla dużych grafów)
-    const LABELS_AUTOHIDE_THRESHOLD = 150;
-    let labelsVisible = (data.nodes || []).length <= LABELS_AUTOHIDE_THRESHOLD;
-
-    const label = container
-      .append("g")
-      .attr("data-layer", "labels")
-      .style("display", labelsVisible ? "block" : "none")
-      .selectAll("text")
-      .data(data.nodes)
-      .enter()
-      .append("text")
-      .text((d) => d.id)
-      .attr("fill", "#ccc")
-      .attr("font-size", 14)
-      .attr("text-anchor", "middle");
-
-    // Toggle etykiet: klawisz "L"
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "l" || e.key === "L") {
-        labelsVisible = !labelsVisible;
-        container
-          .select('g[data-layer="labels"]')
-          .style("display", labelsVisible ? "block" : "none");
-      }
-    });
-
-    // --- P1: FILTRY W PANELU (#filters), bez fixed div na body ---
-    const types = [...new Set((data.nodes || []).map((n) => n.type).filter(Boolean))];
-
-    // stan filtrów (one source of truth)
-    const filterState = Object.fromEntries(types.map((t) => [t, true]));
-
-    function applyFilters() {
-      node.style("display", (d) => (filterState[d.type] === false ? "none" : "block"));
-           label.style("display", (d) =>
-        labelsVisible && filterState[d.type] !== false ? "block" : "none"
-      );
-
-      // Krawędzie: pokazuj tylko jeśli oba końce są widoczne (czytelniejsze i logiczniejsze)
-      link.style("display", (l) => {
-        const sType = l.source && l.source.type;
-        const tType = l.target && l.target.type;
-        const sOn = filterState[sType] !== false;
-        const tOn = filterState[tType] !== false;
-        return sOn && tOn ? "block" : "none";
-      });
-    }
-
-    // render UI filtrów
-    if (filtersEl) {
-      clearElement(filtersEl);
-
-      // minimalny markup bez inline CSS w JS (style dopniemy w style.css w kolejnym kroku)
-      types.forEach((type) => {
-        const row = document.createElement("label");
-        row.className = "filter-row";
-
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = true;
-        cb.className = "filter-checkbox";
-        cb.addEventListener("change", () => {
-          filterState[type] = cb.checked;
-          applyFilters();
-// Zamknięcie widoku szczegółów w panelu (delegacja – działa niezależnie od tego, kiedy powstaje button)
-const panelEl = document.getElementById("panel");
-if (panelEl && !panelEl.__closeDetailsBound) {
-  panelEl.__closeDetailsBound = true;
-
-  panelEl.addEventListener("click", (e) => {
-    const t = e.target;
-    if (t && t.id === "panel-close-details") {
-      e.preventDefault();
-      e.stopPropagation();
-      hidePanelDetails();
-      stopKgrMode({ simulation, nodeSel: node, linkSel: link });
-    }
-  });
-}
-              // P1: sterowanie widokiem (reset / fit)
-    const btnReset = document.getElementById("btn-reset-view");
-    const btnFit = document.getElementById("btn-fit-view");
-
-    if (btnReset) {
-      btnReset.addEventListener("click", () => {
-        svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
-      });
-    }
-
-    if (btnFit) {
-      btnFit.addEventListener("click", () => {
-        // jeśli nie ma pozycji (np. przed pierwszym tick), zrób szybki restart
-        simulation.alpha(0.2).restart();
-
-        // bounding box na podstawie aktualnych x/y węzłów
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-        for (const n of data.nodes) {
-          const x = n.x;
-          const y = n.y;
-          if (typeof x !== "number" || typeof y !== "number") continue;
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-
-        if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
-          // fallback: reset jeśli nie da się policzyć bbox
-          svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
-          return;
-        }
-
-        const graphW = maxX - minX;
-        const graphH = maxY - minY;
-
-        // margines w ekranie
-        const pad = 60;
-        const scale = Math.min(
-          4, // górny limit zoom-in, żeby nie przesadzić
-          Math.max(
-            0.1,
-            Math.min((width - pad) / graphW, (height - pad) / graphH)
-          )
-        );
-
-        const midX = (minX + maxX) / 2;
-        const midY = (minY + maxY) / 2;
-
-        const transform = d3.zoomIdentity
-          .translate(width / 2, height / 2)
-          .scale(scale)
-          .translate(-midX, -midY);
-
-        svg.transition().duration(350).call(zoom.transform, transform);
-      });
-    }
-        });
-
-        const dot = document.createElement("span");
-        dot.className = "filter-dot";
-        dot.style.borderColor = colorMap[type] || "#ccc";
-
-        const text = document.createElement("span");
-        text.className = "filter-text";
-        text.textContent = type;
-
-        row.appendChild(cb);
-        row.appendChild(dot);
-        row.appendChild(text);
-
-        filtersEl.appendChild(row);
-      });
-    }
-
-    applyFilters();
-
-    // Click node
-    node.on("click", (event, d) => {
-      event.stopPropagation();
-
-           showPanelDetails(d);
-
-            // TRYB KGR (UI-only): globalny puls + świecące relacje + gradient energii
-      if (d.id === "KGR") {
-        startKgrMode({ simulation, nodeSel: node, linkSel: link });
-      } else {
-        stopKgrMode({ simulation, nodeSel: node, linkSel: link });
-      }
-    });
-
-    overlay.on("click", () => {
-  overlay.classed("hidden", true);
-  stopKgrMode({ simulation, nodeSel: node, linkSel: link });
+// Background click = deselect
+svg.on("click", () => {
+  if (linkingMode) { cancelLinkMode(); return; }
+  if (selectedNode) {
+    selectedNode = null;
+    if (nodeSel) { nodeSel.classed("selected", false); nodeSel.attr("stroke-width", 2); }
+    stopKgr();
+    panelDefault();
+  }
 });
-    overlayContent.on("click", (e) => e.stopPropagation());
-        // UX: Esc zamyka overlay
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !overlay.classed("hidden")) {
-        overlay.classed("hidden", true);
-      }
-    });
 
-    simulation.on("tick", () => {
-      link
-        .attr("x1", (d) => d.source.x)
-        .attr("y1", (d) => d.source.y)
-        .attr("x2", (d) => d.target.x)
-        .attr("y2", (d) => d.target.y);
-
-      node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
-      label.attr("x", (d) => d.x).attr("y", (d) => d.y - 28);
-    });
-
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    // Resize
-    let resizeTimer = null;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        const size = getGraphSize();
-        width = size.width;
-        height = size.height;
-
-        svg.attr("width", width).attr("height", height);
-        simulation.force("center", d3.forceCenter(width / 2, height / 2));
-        simulation.alpha(0.2).restart();
-      }, 100);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to load data.json:", err);
-    setStatus({ loading: false, error: true });
+// ─── KGR mode ──────────────────────────────────────────────────
+function startKgr() {
+  if (kgrMode) return;
+  kgrMode = true;
+  sim.alphaTarget(0.6).restart();
+  if (nodeSel) nodeSel.transition().duration(250).attr("r", (n) => n.id === "KGR" ? 30 : 18);
+  if (linkSel) linkSel.attr("filter", "url(#glow)").attr("stroke", "url(#kgrEnergy)");
+  const t0 = performance.now();
+  kgrTimer = d3.timer(() => {
+    const t = (performance.now() - t0) / 1000;
+    applyTx(1 + Math.sin(t * 2.6) * 0.012);
+    const w = 1 + Math.sin(t * 11) * 0.18;
+    if (linkSel) linkSel.attr("stroke-width", 1.35 * w).attr("stroke-opacity", 0.55 + 0.25 * Math.sin(t * 6));
+    energyGrad.attr("gradientTransform", `translate(${(t * 90) % 220},0)`);
   });
+}
+
+function stopKgr() {
+  if (!kgrMode) return;
+  kgrMode = false;
+  sim.alphaTarget(0);
+  if (kgrTimer) { kgrTimer.stop(); kgrTimer = null; }
+  applyTx(1);
+  if (nodeSel) nodeSel.transition().duration(250).attr("r", 18);
+  if (linkSel) linkSel.attr("filter", null).attr("stroke", "#1e2a38").attr("stroke-width", 1.8).attr("stroke-opacity", 0.9);
+  energyGrad.attr("gradientTransform", "translate(0,0)");
+}
+
+// ─── Export ────────────────────────────────────────────────────
+function exportJSON() {
+  const clean = cleanData(graphData);
+  const blob  = new Blob([JSON.stringify(clean, null, 2)], { type: "application/json" });
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement("a");
+  a.href = url; a.download = "data.json"; a.click();
+  URL.revokeObjectURL(url);
+  showToast("data.json pobrano — skopiuj do docs/");
+}
+
+// ─── View controls ─────────────────────────────────────────────
+function fitView() {
+  if (!graphData.nodes.length) return;
+  simulation && sim.alpha(0.1).restart();
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  graphData.nodes.forEach(({ x, y }) => {
+    if (typeof x !== "number" || typeof y !== "number") return;
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (y < minY) minY = y; if (y > maxY) maxY = y;
+  });
+  if (!isFinite(minX)) { svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity); return; }
+
+  const pad = 70;
+  const gW  = maxX - minX || 1, gH = maxY - minY || 1;
+  const scale = Math.min(4, Math.max(0.1, Math.min((W - pad) / gW, (H - pad) / gH)));
+  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(scale).translate(-(minX + maxX) / 2, -(minY + maxY) / 2);
+  svg.transition().duration(350).call(zoom.transform, t);
+}
+
+// ─── Button wiring ─────────────────────────────────────────────
+function wireButtons() {
+  // View
+  const btnReset = $("btn-reset-view");
+  if (btnReset) btnReset.addEventListener("click", () =>
+    svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity));
+
+  const btnFit = $("btn-fit-view");
+  if (btnFit) btnFit.addEventListener("click", fitView);
+
+  const btnLabels = $("btn-toggle-labels");
+  if (btnLabels) btnLabels.addEventListener("click", () => {
+    labelsOn = !labelsOn;
+    btnLabels.style.opacity = labelsOn ? "1" : "0.45";
+    gMain.select("g.g-labels").style("display", labelsOn ? "" : "none");
+    applyFilters();
+  });
+
+  // Graph edit
+  const btnAddNode = $("btn-add-node");
+  if (btnAddNode) btnAddNode.addEventListener("click", () => {
+    cancelLinkMode();
+    selectedNode = null;
+    if (nodeSel) { nodeSel.classed("selected", false); nodeSel.attr("stroke-width", 2); }
+    panelForm("add");
+  });
+
+  const btnAddLink = $("btn-add-link");
+  if (btnAddLink) btnAddLink.addEventListener("click", () => {
+    if (linkingMode) { cancelLinkMode(); return; }
+    startLinkMode();
+  });
+
+  const btnExport = $("btn-export");
+  if (btnExport) btnExport.addEventListener("click", exportJSON);
+
+  const btnCancelLink = $("btn-cancel-link");
+  if (btnCancelLink) btnCancelLink.addEventListener("click", cancelLinkMode);
+
+  // Node actions
+  const btnEdit = $("btn-edit-node");
+  if (btnEdit) btnEdit.addEventListener("click", () => {
+    if (selectedNode) panelForm("edit", selectedNode);
+  });
+
+  const btnDelete = $("btn-delete-node");
+  if (btnDelete) btnDelete.addEventListener("click", () => {
+    if (!selectedNode) return;
+    if (confirm(`Usunąć węzeł "${selectedNode.id}" i wszystkie jego relacje?`)) {
+      deleteSelectedNode();
+    }
+  });
+
+  // Form
+  const btnSubmit = $("btn-form-submit");
+  if (btnSubmit) btnSubmit.addEventListener("click", () => {
+    submitForm();
+    closeForm();
+  });
+
+  const btnCancel = $("btn-form-cancel");
+  if (btnCancel) btnCancel.addEventListener("click", closeForm);
+}
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (linkingMode) { cancelLinkMode(); return; }
+    if (formMode) { closeForm(); return; }
+    if (selectedNode) {
+      selectedNode = null;
+      if (nodeSel) { nodeSel.classed("selected", false); nodeSel.attr("stroke-width", 2); }
+      stopKgr(); panelDefault();
+    }
+  }
+  if ((e.key === "l" || e.key === "L") && !e.target.closest("input, textarea, select")) {
+    labelsOn = !labelsOn;
+    const btn = $("btn-toggle-labels");
+    if (btn) btn.style.opacity = labelsOn ? "1" : "0.45";
+    gMain.select("g.g-labels").style("display", labelsOn ? "" : "none");
+    applyFilters();
+  }
+  if (e.key === "Delete" && selectedNode && !formMode) {
+    if (confirm(`Usunąć węzeł "${selectedNode.id}"?`)) deleteSelectedNode();
+  }
+  // Enter submits form
+  if (e.key === "Enter" && formMode && e.target.tagName !== "TEXTAREA") {
+    submitForm(); closeForm();
+  }
+});
+
+// Resize
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    refreshSize();
+    svg.attr("width", W).attr("height", H);
+    if (sim) { sim.force("center", d3.forceCenter(W / 2, H / 2)); sim.alpha(0.2).restart(); }
+  }, 100);
+});
+
+// ─── Bootstrap ─────────────────────────────────────────────────
+setStatus({ loading: true, error: false });
+wireButtons();
+
+const cached = loadFromStorage();
+
+if (cached && cached.nodes && cached.nodes.length) {
+  // Use localStorage cache
+  graphData = cached;
+  setStatus({ loading: false, error: false });
+  buildSim();
+  renderGraph();
+} else {
+  // Load from data.json
+  d3.json("data.json")
+    .then((raw) => {
+      setStatus({ loading: false, error: false });
+      graphData = raw;
+      saveToStorage(); // seed localStorage
+      buildSim();
+      renderGraph();
+    })
+    .catch((err) => {
+      console.error("data.json load failed:", err);
+      setStatus({ loading: false, error: true });
+    });
+}
