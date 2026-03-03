@@ -3,49 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zecevolucja - Dynamiczna Ontologia</title>
-  <link rel="stylesheet" href="style.css?v=2" />
+  <title>Zecevolucja — Ontologia Dynamiczna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
 <div id="container">
-  <div id="graph"></div>
+
+  <div id="graph">
+    <div id="link-banner">
+      <span id="link-banner-text">Kliknij węzeł źródłowy</span>
+      <button id="btn-cancel-link" class="btn btn-sm">✕ Anuluj</button>
+    </div>
+  </div>
 
   <div id="panel">
-    <h2 id="node-title">Wybierz węzeł</h2>
-    <p id="node-description">Kliknij element grafu, aby zobaczyć opis.</p>
-
-    <!-- P0: jawny status ładowania/błędu danych (graph.js tym steruje) -->
-    <div id="status" role="status" aria-live="polite" style="margin-top:12px;">
-      <div id="status-loading">Ładowanie danych…</div>
-      <div id="status-error" style="display:none;">
-        Błąd ładowania danych. Sprawdź <code>docs/data.json</code> oraz konsolę przeglądarki.
+    <div id="panel-header">
+      <div id="panel-header-main">
+        <span id="node-title">zecevolucja</span>
+        <span id="node-type-badge" class="type-badge"></span>
+      </div>
+      <div id="panel-header-sub" role="status" aria-live="polite">
+        <span id="status-loading" class="status-msg">Ładowanie…</span>
+        <span id="status-error"   class="status-msg status-err" style="display:none">Błąd data.json</span>
       </div>
     </div>
 
-    <a id="node-link" href="#" target="_blank"></a>
-    <!-- P1: sterowanie widokiem grafu (logika w graph.js w kolejnym commicie) -->
-    <div id="view-controls">
-      <button id="btn-reset-view" type="button">Reset widoku</button>
-      <button id="btn-fit-view" type="button">Dopasuj (fit)</button>
+    <!-- View: default / detail -->
+    <div id="view-main" class="panel-body">
+      <p id="node-description" class="desc-placeholder">Kliknij węzeł grafu, aby zobaczyć opis.</p>
+      <a id="node-link" href="#" target="_blank" rel="noopener"></a>
+
+      <div id="node-actions" style="display:none">
+        <div class="divider"></div>
+        <div class="btn-row">
+          <button id="btn-edit-node"   class="btn btn-primary">✎ Edytuj</button>
+          <button id="btn-delete-node" class="btn btn-danger">✕ Usuń</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-label">Widok</p>
+      <div class="btn-row">
+        <button id="btn-reset-view"    class="btn">↺ Reset</button>
+        <button id="btn-fit-view"      class="btn">⊡ Fit</button>
+        <button id="btn-toggle-labels" class="btn" title="Skrót: L">⊙ Etykiety</button>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-label">Edytuj graf</p>
+      <div class="btn-row">
+        <button id="btn-add-node" class="btn btn-primary">+ Węzeł</button>
+        <button id="btn-add-link" class="btn">↔ Relacja</button>
+      </div>
+      <div class="btn-row">
+        <button id="btn-export" class="btn btn-export">⬇ Eksportuj JSON</button>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-label">Filtry</p>
+      <div id="filters"></div>
     </div>
-    <!-- P1 (krok 1): stały kontener na filtry (zamiast dynamicznego fixed div w JS) -->
-    <hr style="border:0;border-top:1px solid #30363d;margin:16px 0;" />
-    <h3 style="margin:0 0 8px 0;font-size:14px;color:#e6edf3;">Filtry</h3>
-    <div id="filters"></div>
+
+    <!-- View: formularz -->
+    <div id="view-form" class="panel-body" style="display:none">
+      <p class="section-label" id="form-mode-title">Nowy węzeł</p>
+      <div class="form-field">
+        <label class="form-label" for="form-id">ID węzła *</label>
+        <input class="form-input" id="form-id" type="text" placeholder="NazwaWęzła" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="form-type">Typ</label>
+        <select class="form-select" id="form-type">
+          <option value="proces">proces</option>
+          <option value="stan">stan</option>
+          <option value="zagrożenie">zagrożenie</option>
+          <option value="meta">meta</option>
+          <option value="B">B — operacyjne</option>
+          <option value="C">C — heurystyczne</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="form-desc">Opis</label>
+        <textarea class="form-textarea" id="form-desc" placeholder="Opis węzła…" rows="4"></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="form-url">URL (opcjonalnie)</label>
+        <input class="form-input" id="form-url" type="url" placeholder="https://…"/>
+      </div>
+      <div class="btn-row" style="margin-top:16px">
+        <button id="btn-form-submit" class="btn btn-primary">Zapisz</button>
+        <button id="btn-form-cancel" class="btn">Anuluj</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div id="overlay" class="hidden">
-  <div id="overlay-content">
-    <h2 id="overlay-title"></h2>
-    <p id="overlay-description"></p>
-    <a id="overlay-link" href="#" target="_blank"></a>
-  </div>
-</div>
+<div id="toast" aria-live="assertive"></div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="graph.js"></script>
-
 </body>
 </html>
