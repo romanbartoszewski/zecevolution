@@ -34,7 +34,8 @@
     <!-- View: default / detail -->
     <div id="view-main" class="panel-body">
       <p id="node-description" class="desc-placeholder">Kliknij węzeł grafu, aby zobaczyć opis.</p>
-      <a id="node-link" href="#" target="_blank" rel="noopener"></a>
+      <a id="node-link" href="#" target="_blank" rel="noopener" style="display:none"></a>
+      <code id="node-gh-path" class="node-gh-path" style="display:none"></code>
 
       <div id="node-actions" style="display:none">
         <div class="divider"></div>
@@ -60,6 +61,16 @@
       </div>
       <div class="btn-row">
         <button id="btn-export" class="btn btn-export">⬇ Eksportuj JSON</button>
+      </div>
+
+      <div class="divider"></div>
+      <p class="section-label">GitHub</p>
+      <div class="btn-row">
+        <button id="btn-gh-sync"  class="btn btn-sync">⟳ Sync</button>
+        <button id="btn-gh-login" class="btn btn-login">🔑 Zaloguj</button>
+      </div>
+      <div class="btn-row">
+        <button id="btn-gh-push" class="btn btn-push" style="display:none">⬆ Zapisz na GitHub</button>
       </div>
 
       <div class="divider"></div>

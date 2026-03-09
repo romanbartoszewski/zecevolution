@@ -98,10 +98,16 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
 #node-link {
   display:inline-block; font-family:var(--font-mono); font-size:11px;
-  color:var(--accent-blue); text-decoration:none; margin-bottom:8px;
+  color:var(--accent-blue); text-decoration:none; margin-bottom:6px;
 }
 #node-link:hover { text-decoration:underline; }
-#node-link:empty { display:none; }
+
+.node-gh-path {
+  display:block; font-family:var(--font-mono); font-size:10px;
+  color:var(--text-dim); word-break:break-all; margin-bottom:6px;
+  padding:3px 6px; background:var(--surface); border-radius:3px;
+  border:1px solid var(--border);
+}
 
 /* ── Buttons ── */
 .btn {
@@ -112,7 +118,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
   font-weight:600; letter-spacing:.03em; cursor:pointer;
   transition:all var(--ease); white-space:nowrap; user-select:none;
 }
-.btn:hover { background:var(--surface-hi); border-color:var(--border-hi); color:var(--text); }
+.btn:hover   { background:var(--surface-hi); border-color:var(--border-hi); color:var(--text); }
+.btn:disabled { opacity:.45; cursor:wait; pointer-events:none; }
 
 .btn-primary { border-color:var(--accent); color:var(--accent); background:rgba(0,229,176,.06); }
 .btn-primary:hover { background:rgba(0,229,176,.14); box-shadow:0 0 12px rgba(0,229,176,.14); }
@@ -123,8 +130,17 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .btn-export { border-color:var(--border-hi); color:var(--text-muted); }
 .btn-export:hover { border-color:var(--accent-blue); color:var(--accent-blue); }
 
-.btn-sm { height:24px; padding:0 8px; font-size:10px; }
+/* ── GitHub buttons ── */
+.btn-sync  { border-color:var(--accent-blue); color:var(--accent-blue); }
+.btn-sync:hover  { background:rgba(77,159,255,.1); }
 
+.btn-push  { border-color:var(--accent); color:var(--accent); background:rgba(0,229,176,.06); width:100%; }
+.btn-push:hover  { background:rgba(0,229,176,.14); box-shadow:0 0 12px rgba(0,229,176,.12); }
+
+.btn-login { border-color:var(--border-hi); color:var(--text-muted); }
+.btn-login:hover { border-color:var(--accent-warm); color:var(--accent-warm); }
+
+.btn-sm  { height:24px; padding:0 8px; font-size:10px; }
 .btn-row { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
 
 /* ── Divider & labels ── */
@@ -221,6 +237,32 @@ body.linking #graph { cursor:crosshair; }
   from { opacity:0; transform:translateX(6px); }
   to   { opacity:1; transform:translateX(0); }
 }
+
+/* ── Auth modal ── */
+#auth-modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  display:flex; align-items:center; justify-content:center;
+  z-index:300; opacity:0; pointer-events:none;
+  transition:opacity .2s ease;
+  backdrop-filter:blur(4px);
+}
+#auth-modal.active { opacity:1; pointer-events:all; }
+
+#auth-box {
+  background:var(--panel-bg);
+  border:1px solid var(--border-hi);
+  border-radius:8px; padding:24px;
+  width:340px; max-width:90vw;
+  animation:panelIn .15s ease;
+}
+#auth-box code {
+  font-family:var(--font-mono); font-size:11px;
+  background:var(--surface); padding:1px 5px;
+  border-radius:3px; border:1px solid var(--border);
+}
+#auth-box a { color:var(--accent-blue); text-decoration:none; }
+#auth-box a:hover { text-decoration:underline; }
 
 /* ── Responsive ── */
 @media (max-width:580px) {
